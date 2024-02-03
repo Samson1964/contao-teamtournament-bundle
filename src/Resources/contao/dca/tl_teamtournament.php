@@ -21,7 +21,7 @@ $GLOBALS['TL_DCA']['tl_teamtournament'] = array
 	'config' => array
 	(
 		'dataContainer'               => 'Table',
-		//'ctable'                      => array('tl_teamtournament_teams'),
+		'ctable'                      => array('tl_teamtournament_teams'),
 		'switchToEdit'                => true,
 		'enableVersioning'            => true,
 		'sql' => array
@@ -65,7 +65,7 @@ $GLOBALS['TL_DCA']['tl_teamtournament'] = array
 			'edit' => array
 			(
 				'label'               => &$GLOBALS['TL_LANG']['tl_teamtournament']['edit'],
-				'href'                => 'table=tl_teamtournament_matches',
+				'href'                => 'table=tl_teamtournament_teams',
 				'icon'                => 'edit.gif'
 			),
 			'editheader' => array
@@ -116,7 +116,7 @@ $GLOBALS['TL_DCA']['tl_teamtournament'] = array
 	// Palettes
 	'palettes' => array
 	(
-		'default'                     => '{title_legend},title,type;{place_legend},place,country;{date_legend},fromDate,toDate;{info_legend:hide},info,source;{options_legend:hide},singleSRC,url;{publish_legend},complete,published'
+		'default'                     => '{title_legend},title;{place_legend},place,country;{date_legend},fromDate,toDate;{language_legend},language;{info_legend:hide},info,source;{options_legend:hide},singleSRC,url;{imageSize_legend:hide},imageSize_lineup,imageSize_results;{publish_legend},complete,published'
 	),
 
 	// Fields
@@ -179,23 +179,6 @@ $GLOBALS['TL_DCA']['tl_teamtournament'] = array
 				'tl_class'            => 'w50'
 			),
 			'sql'                     => "varchar(2) NOT NULL default ''"
-		),  
-		'type' => array
-		(
-			'label'                   => &$GLOBALS['TL_LANG']['tl_teamtournament']['type'],
-			'exclude'                 => true,
-			'filter'                  => true,
-			'default'                 => '',
-			'inputType'               => 'select',
-			'options'                 => $GLOBALS['TL_LANG']['tl_teamtournament']['typen'], 
-			'eval'                    => array
-			(
-				'includeBlankOption'  => true,
-				'mandatory'           => false,
-				'doNotCopy'           => false,
-				'tl_class'            => 'w50',
-			),
-			'sql'                     => "char(2) NOT NULL default ''"
 		),  
 		'fromDate' => array
 		(
@@ -286,6 +269,23 @@ $GLOBALS['TL_DCA']['tl_teamtournament'] = array
 			),
 			'sql'                     => "varchar(255) NOT NULL default ''"
 		), 
+		'language' => array
+		(
+			'label'                   => &$GLOBALS['TL_LANG']['tl_teamtournament']['language'],
+			'exclude'                 => true,
+			'search'                  => true,
+			'sorting'                 => true,
+			'flag'                    => 1,
+			'inputType'               => 'select',
+			'options'                 => array('de', 'en'),
+			'reference'               => &$GLOBALS['TL_LANG']['tl_teamtournament']['language_options'],
+			'eval'                    => array
+			(
+				'mandatory'           => true, 
+				'tl_class'            => 'w50'
+			),
+			'sql'                     => "varchar(2) NOT NULL default ''"
+		),
 		'complete' => array
 		(
 			'label'                   => &$GLOBALS['TL_LANG']['tl_teamtournament']['complete'],
@@ -296,6 +296,46 @@ $GLOBALS['TL_DCA']['tl_teamtournament'] = array
 			'inputType'               => 'checkbox',
 			'sql'                     => "char(1) NOT NULL default ''"
 		),  
+		'imageSize_lineup' => array
+		(
+			'label'                   => &$GLOBALS['TL_LANG']['tl_teamtournament']['imageSize_lineup'],
+			'exclude'                 => true,
+			'inputType'               => 'imageSize',
+			'reference'               => &$GLOBALS['TL_LANG']['MSC'],
+			'eval'                    => array
+			(
+				'rgxp'                => 'natural',
+				'includeBlankOption'  => true,
+				'nospace'             => true,
+				'helpwizard'          => true,
+				'tl_class'            => 'w50'
+			),
+			'options_callback'        => static function ()
+			{
+				return System::getContainer()->get('contao.image.image_sizes')->getOptionsForUser(BackendUser::getInstance());
+			},
+			'sql'                     => "varchar(255) NOT NULL default ''"
+		),
+		'imageSize_results' => array
+		(
+			'label'                   => &$GLOBALS['TL_LANG']['tl_teamtournament']['imageSize_results'],
+			'exclude'                 => true,
+			'inputType'               => 'imageSize',
+			'reference'               => &$GLOBALS['TL_LANG']['MSC'],
+			'eval'                    => array
+			(
+				'rgxp'                => 'natural',
+				'includeBlankOption'  => true,
+				'nospace'             => true,
+				'helpwizard'          => true,
+				'tl_class'            => 'w50 clr'
+			),
+			'options_callback'        => static function ()
+			{
+				return System::getContainer()->get('contao.image.image_sizes')->getOptionsForUser(BackendUser::getInstance());
+			},
+			'sql'                     => "varchar(255) NOT NULL default ''"
+		),
 		'published' => array
 		(
 			'label'                   => &$GLOBALS['TL_LANG']['tl_teamtournament']['published'],

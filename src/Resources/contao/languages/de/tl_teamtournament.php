@@ -7,71 +7,48 @@
  */
 
 // Eingabemaske
-$GLOBALS['TL_LANG']['tl_teamtournament']['title_legend'] = 'Titel und Art';
-$GLOBALS['TL_LANG']['tl_teamtournament']['title'][0] = 'Name';
-$GLOBALS['TL_LANG']['tl_teamtournament']['title'][1] = 'Name des Wettbewerbs';
-$GLOBALS['TL_LANG']['tl_teamtournament']['type'][0] = 'Art';
-$GLOBALS['TL_LANG']['tl_teamtournament']['type'][1] = 'Art des Wettbewerbs';
-$GLOBALS['TL_LANG']['tl_teamtournament']['alias'][0] = 'Alias';
-$GLOBALS['TL_LANG']['tl_teamtournament']['alias'][1] = 'Der Alias wird automatisch generiert, wenn das Feld leer ist';
+$GLOBALS['TL_LANG']['tl_teamtournament']['title_legend'] = 'Turniername';
+$GLOBALS['TL_LANG']['tl_teamtournament']['title'] = array('Turniername', 'Turniername des Wettbewerbs');
 
 $GLOBALS['TL_LANG']['tl_teamtournament']['place_legend'] = 'Ort';
-$GLOBALS['TL_LANG']['tl_teamtournament']['place'][0] = 'Ort';
-$GLOBALS['TL_LANG']['tl_teamtournament']['place'][1] = 'Ort in dem der Wettbewerb stattfand';
-$GLOBALS['TL_LANG']['tl_teamtournament']['country'][0] = 'Land';
-$GLOBALS['TL_LANG']['tl_teamtournament']['country'][1] = 'Land in dem der Wettbewerb stattfand';
+$GLOBALS['TL_LANG']['tl_teamtournament']['place'] = array('Ort', 'Ort in dem der Wettbewerb stattfand');
+$GLOBALS['TL_LANG']['tl_teamtournament']['country'] = array('Land', 'Land in dem der Wettbewerb stattfand');
 
 $GLOBALS['TL_LANG']['tl_teamtournament']['date_legend'] = 'Zeitraum';
-$GLOBALS['TL_LANG']['tl_teamtournament']['fromDate'][0] = 'Beginn';
-$GLOBALS['TL_LANG']['tl_teamtournament']['fromDate'][1] = 'Beginndatum im Format JJJJ, MM.JJJJ oder TT.MM.JJJJ';
-$GLOBALS['TL_LANG']['tl_teamtournament']['toDate'][0] = 'Ende';
-$GLOBALS['TL_LANG']['tl_teamtournament']['toDate'][1] = 'Endedatum im Format JJJJ, MM.JJJJ oder TT.MM.JJJJ (kann leerbleiben bei einem eintägigen Wettbewerb)';
+$GLOBALS['TL_LANG']['tl_teamtournament']['fromDate'] = array('Beginn', 'Beginndatum im Format JJJJ, MM.JJJJ oder TT.MM.JJJJ');
+$GLOBALS['TL_LANG']['tl_teamtournament']['toDate'] = array('Ende', 'Endedatum im Format JJJJ, MM.JJJJ oder TT.MM.JJJJ (kann leerbleiben bei einem eintägigen Wettbewerb)');
 
 $GLOBALS['TL_LANG']['tl_teamtournament']['options_legend'] = 'Logo und Webadresse';
-$GLOBALS['TL_LANG']['tl_teamtournament']['singleSRC'][0] = 'Datei';
-$GLOBALS['TL_LANG']['tl_teamtournament']['singleSRC'][1] = 'Datei auswählen';
-$GLOBALS['TL_LANG']['tl_teamtournament']['url'][0] = 'Homepage';
-$GLOBALS['TL_LANG']['tl_teamtournament']['url'][1] = 'Internetadresse oder interne Seite';
+$GLOBALS['TL_LANG']['tl_teamtournament']['singleSRC'] = array('Datei', 'Datei auswählen');
+$GLOBALS['TL_LANG']['tl_teamtournament']['url'] = array('Homepage', 'Internetadresse oder interne Seite');
+
+$GLOBALS['TL_LANG']['tl_teamtournament']['language_legend'] = 'Sprache';
+$GLOBALS['TL_LANG']['tl_teamtournament']['language'] = array('Sprache', 'Sprache von Frontend-Ausgaben');
 
 $GLOBALS['TL_LANG']['tl_teamtournament']['publish_legend'] = 'Veröffentlichung';
 $GLOBALS['TL_LANG']['tl_teamtournament']['complete'] = array('Komplett', 'Der Wettbewerb ist vollständig erfaßt und alle Daten der Kindtabellen sind komplett.');
 $GLOBALS['TL_LANG']['tl_teamtournament']['published'] = array('Veröffentlicht', 'Wettbewerb veröffentlicht');
 
+$GLOBALS['TL_LANG']['tl_teamtournament']['imageSize_legend'] = 'Bildgrößen';
+$GLOBALS['TL_LANG']['tl_teamtournament']['imageSize_lineup'] = array('Bildgröße Aufstellungen', 'Bildgröße in der Tabelle mit der Aufstellung');
+$GLOBALS['TL_LANG']['tl_teamtournament']['imageSize_results'] = array('Bildgröße Ergebnisse', 'Bildgröße in der Tabelle mit den Ergebnissen');
+
 $GLOBALS['TL_LANG']['tl_teamtournament']['info_legend'] = 'Information';
 $GLOBALS['TL_LANG']['tl_teamtournament']['info'] = array('Information', 'Anmerkungen zum Wettbewerb');
 $GLOBALS['TL_LANG']['tl_teamtournament']['source'] = array('Quelle', 'Quelle der Daten dieses Wettbewerbs');
-
-$GLOBALS['TL_LANG']['tl_teamtournament']['typen'] = array
-(
-	'WM' => 'Weltmeisterschaft',
-	'EM' => 'Europameisterschaft',
-	'OL' => 'Olympiade',
-	'MC' => 'Mitropacup',
-	'LT' => 'Länderturnier',
-	'LK' => 'Länderkampf',
-);
-
 /**
  * Buttons für Operationen
  */
 
-$GLOBALS['TL_LANG']['tl_teamtournament']['players'][0] = 'Spieler';
-$GLOBALS['TL_LANG']['tl_teamtournament']['players'][1] = 'Spielerverwaltung für die auszuwertenden Nationalspieler';
+$GLOBALS['TL_LANG']['tl_teamtournament']['new'] = array('Neuer Wettbewerb', 'Neuen Wettbewerb anlegen');
+$GLOBALS['TL_LANG']['tl_teamtournament']['edit'] = array('Wettbewerb bearbeiten', 'Wettbewerb %s bearbeiten');
+$GLOBALS['TL_LANG']['tl_teamtournament']['copy'] = array('Wettbewerb kopieren', 'Wettbewerb %s kopieren');
+$GLOBALS['TL_LANG']['tl_teamtournament']['delete'] = array('Wettbewerb löschen', 'Wettbewerb %s löschen');
+$GLOBALS['TL_LANG']['tl_teamtournament']['toggle'] = array('Wettbewerb aktivieren/deaktivieren', 'Wettbewerb %s aktivieren/deaktivieren');
+$GLOBALS['TL_LANG']['tl_teamtournament']['show'] = array('Wettbewerbdetails anzeigen', 'Details des Wettbewerbs %s anzeigen');
 
-$GLOBALS['TL_LANG']['tl_teamtournament']['new'][0] = 'Neuer Wettbewerb';
-$GLOBALS['TL_LANG']['tl_teamtournament']['new'][1] = 'Neuen Wettbewerb anlegen';
-
-$GLOBALS['TL_LANG']['tl_teamtournament']['edit'][0] = "Wettbewerb bearbeiten";
-$GLOBALS['TL_LANG']['tl_teamtournament']['edit'][1] = "Wettbewerb %s bearbeiten";
-
-$GLOBALS['TL_LANG']['tl_teamtournament']['copy'][0] = "Wettbewerb kopieren";
-$GLOBALS['TL_LANG']['tl_teamtournament']['copy'][1] = "Wettbewerb %s kopieren";
-
-$GLOBALS['TL_LANG']['tl_teamtournament']['delete'][0] = "Wettbewerb löschen";
-$GLOBALS['TL_LANG']['tl_teamtournament']['delete'][1] = "Wettbewerb %s löschen";
-
-$GLOBALS['TL_LANG']['tl_teamtournament']['toggle'][0] = "Wettbewerb aktivieren/deaktivieren";
-$GLOBALS['TL_LANG']['tl_teamtournament']['toggle'][1] = "Wettbewerb %s aktivieren/deaktivieren";
-
-$GLOBALS['TL_LANG']['tl_teamtournament']['show'][0] = "Wettbewerbdetails anzeigen";
-$GLOBALS['TL_LANG']['tl_teamtournament']['show'][1] = "Details des Wettbewerbs %s anzeigen";
+$GLOBALS['TL_LANG']['tl_teamtournament']['language_options'] = array
+(
+	'de' => 'Deutsch', 
+	'en' => 'Englisch'
+);
