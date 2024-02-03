@@ -40,19 +40,19 @@ class Captain extends \ContentElement
 		$content .= '<tr>';
 		if($objTurnier->language == 'de')
 		{
-			$content .= '<td>Foto</td>';
-			$content .= '<td>Kapitän</td>';
-			$content .= '<td>Alter</td>';
-			$content .= '<td>Elo</td>';
-			$content .= '<td>Weblinks</td>';
+			$content .= '<th>Foto</th>';
+			$content .= '<th>Kapitän</th>';
+			$content .= '<th>Alter</th>';
+			$content .= '<th>Elo</th>';
+			$content .= '<th>Weblinks</th>';
 		}
 		elseif($objTurnier->language == 'en')
 		{
-			$content .= '<td>Photo</td>';
-			$content .= '<td>Captain</td>';
-			$content .= '<td>Age</td>';
-			$content .= '<td>Elo</td>';
-			$content .= '<td>Weblinks</td>';
+			$content .= '<th>Photo</th>';
+			$content .= '<th>Captain</th>';
+			$content .= '<th>Age</th>';
+			$content .= '<th>Elo</th>';
+			$content .= '<th>Weblinks</th>';
 		}
 		$content .= '</tr>';
 		// Kapitän ausgeben
@@ -78,7 +78,7 @@ class Captain extends \ContentElement
 				}
 			}
 			// Foto erstellen
-			$foto = '';
+			$bild = '';
 			if($objMannschaft->singleSRC)
 			{
 				$objFile = \FilesModel::findByUuid($objMannschaft->singleSRC);

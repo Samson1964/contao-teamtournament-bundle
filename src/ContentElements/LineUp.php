@@ -43,21 +43,21 @@ class LineUp extends \ContentElement
 		$content .= '<tr>';
 		if($objTurnier->language == 'de')
 		{
-			$content .= '<td>Foto</td>';
-			$content .= '<td>Spieler</td>';
-			$content .= '<td>Alter</td>';
-			$content .= '<td>Elo</td>';
-			$content .= '<td>Brett</td>';
-			$content .= '<td>Weblinks</td>';
+			$content .= '<th>Foto</th>';
+			$content .= '<th>Spieler</th>';
+			$content .= '<th>Alter</th>';
+			$content .= '<th>Elo</th>';
+			$content .= '<th>Brett</th>';
+			$content .= '<th>Weblinks</th>';
 		}
 		elseif($objTurnier->language == 'en')
 		{
-			$content .= '<td>Photo</td>';
-			$content .= '<td>Player</td>';
-			$content .= '<td>Age</td>';
-			$content .= '<td>Elo</td>';
-			$content .= '<td>Board</td>';
-			$content .= '<td>Weblinks</td>';
+			$content .= '<th>Photo</th>';
+			$content .= '<th>Player</th>';
+			$content .= '<th>Age</th>';
+			$content .= '<th>Elo</th>';
+			$content .= '<th>Board</th>';
+			$content .= '<th>Weblinks</th>';
 		}
 		$content .= '</tr>';
 		// Spieler ausgeben
@@ -83,7 +83,7 @@ class LineUp extends \ContentElement
 				}
 			}
 			// Foto erstellen
-			$foto = '';
+			$bild = '';
 			if($objSpieler->singleSRC)
 			{
 				$objFile = \FilesModel::findByUuid($objSpieler->singleSRC);
