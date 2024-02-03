@@ -1,0 +1,39 @@
+{
+    "name": "schachbulle/contao-teamtournament-bundle",
+    "type": "contao-bundle",
+    "description": "Mannschaftsturniere-Bundle für Contao 4",
+    "license": "LGPL-3.0-or-later",
+    "authors": [
+        {
+            "name": "Frank Hoppe",
+            "homepage": "https://www.schachbulle.de/"
+        }
+    ],
+    "require": {
+        "php": "^5.6 || ^7.0",
+        "contao/core-bundle": "^4",
+        "components/flag-icon-css": "^3.5",
+        "menatwork/contao-multicolumnwizard-bundle": "*",
+        "codefog/contao-haste": "*"
+    },
+    "conflict": {
+        "contao/core": "*",
+        "contao/manager-plugin": "<2.0 || >=3.0"
+    },
+    "require-dev": {
+        "contao/manager-plugin": "^2.0",
+        "doctrine/doctrine-cache-bundle": "^1.3"
+    },
+    "extra": {
+        "contao-manager-plugin": "Schachbulle\\ContaoTeamtournamentBundle\\ContaoManager\\Plugin"
+    },
+    "autoload": {
+        "psr-4": {
+            "Schachbulle\\ContaoTeamtournamentBundle\\": "src/"
+        }
+    },
+    "support": {
+        "issues": "https://github.com/Samson1964/contao-teamtournament-bundle/issues",
+        "source": "https://github.com/Samson1964/contao-teamtournament-bundle"
+    }
+}
