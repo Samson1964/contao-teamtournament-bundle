@@ -21,7 +21,7 @@ $GLOBALS['TL_DCA']['tl_teamtournament'] = array
 	'config' => array
 	(
 		'dataContainer'               => 'Table',
-		'ctable'                      => array('tl_teamtournament_teams'),
+		'ctable'                      => array('tl_teamtournament_teams', 'tl_teamtournament_matches'),
 		'switchToEdit'                => true,
 		'enableVersioning'            => true,
 		'sql' => array
@@ -74,6 +74,12 @@ $GLOBALS['TL_DCA']['tl_teamtournament'] = array
 				'href'                => 'act=edit',
 				'icon'                => 'header.gif',
 				'button_callback'     => array('tl_teamtournament', 'editHeader')
+			),
+			'matches' => array
+			(
+				'label'               => &$GLOBALS['TL_LANG']['tl_teamtournament']['matches'],
+				'href'                => 'table=tl_teamtournament_matches',
+				'icon'                => 'bundles/contaoteamtournament/images/match.png',
 			),
 			'copy' => array
 			(

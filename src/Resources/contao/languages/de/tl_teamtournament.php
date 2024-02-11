@@ -42,6 +42,7 @@ $GLOBALS['TL_LANG']['tl_teamtournament']['source'] = array('Quelle', 'Quelle der
 
 $GLOBALS['TL_LANG']['tl_teamtournament']['new'] = array('Neuer Wettbewerb', 'Neuen Wettbewerb anlegen');
 $GLOBALS['TL_LANG']['tl_teamtournament']['edit'] = array('Wettbewerb bearbeiten', 'Wettbewerb %s bearbeiten');
+$GLOBALS['TL_LANG']['tl_teamtournament']['matches'] = array('Wettkämpfe des Wettbewerbs bearbeiten', 'Wettkämpfe des Wettbewerbs %s bearbeiten');
 $GLOBALS['TL_LANG']['tl_teamtournament']['copy'] = array('Wettbewerb kopieren', 'Wettbewerb %s kopieren');
 $GLOBALS['TL_LANG']['tl_teamtournament']['delete'] = array('Wettbewerb löschen', 'Wettbewerb %s löschen');
 $GLOBALS['TL_LANG']['tl_teamtournament']['toggle'] = array('Wettbewerb aktivieren/deaktivieren', 'Wettbewerb %s aktivieren/deaktivieren');

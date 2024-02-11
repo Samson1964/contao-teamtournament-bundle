@@ -13,7 +13,7 @@
 
 $GLOBALS['BE_MOD']['content']['teamtournament'] = array
 (
-	'tables'         => array('tl_teamtournament', 'tl_teamtournament_teams', 'tl_teamtournament_players'),
+	'tables'         => array('tl_teamtournament', 'tl_teamtournament_teams', 'tl_teamtournament_players', 'tl_teamtournament_matches', 'tl_teamtournament_games'),
 	'icon'           => 'bundles/contaoteamtournament/images/icon.png',
 );
 
@@ -24,3 +24,4 @@ $GLOBALS['BE_MOD']['content']['teamtournament'] = array
  */
 $GLOBALS['TL_CTE']['chess']['tt-lineup'] = 'Schachbulle\ContaoTeamtournamentBundle\ContentElements\LineUp';
 $GLOBALS['TL_CTE']['chess']['tt-captain'] = 'Schachbulle\ContaoTeamtournamentBundle\ContentElements\Captain';
+$GLOBALS['TL_CTE']['chess']['tt-round'] = 'Schachbulle\ContaoTeamtournamentBundle\ContentElements\Rounds';
