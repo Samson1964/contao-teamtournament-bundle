@@ -1,5 +1,9 @@
 # Mannschaftsturniere-Bundle Changelog
 
+## Version 0.1.4 (2024-02-12)
+
+* Add: Standardbilder in Aufstellungen + Kapitän
+
 ## Version 0.1.3 (2024-02-12)
 
 * Add: CSS-Klassen bei Paarungslisten erweitert

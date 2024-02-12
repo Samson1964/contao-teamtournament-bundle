@@ -82,11 +82,26 @@ class LineUp extends \ContentElement
 					if($weblink['url']) $links .= '<a href="'.$weblink['url'].'" target="_blank">'.$weblink['title'].'</a> ';
 				}
 			}
+
 			// Foto erstellen
-			$bild = '';
 			if($objSpieler->singleSRC)
 			{
-				$objFile = \FilesModel::findByUuid($objSpieler->singleSRC);
+				$bild_id = $objSpieler->singleSRC;
+			}
+			elseif($objTurnier->gender == 'm')
+			{
+				$bild_id = $GLOBALS['TL_CONFIG']['teamtournament_defaultImageMen'];
+			}
+			elseif($objTurnier->gender == 'w')
+			{
+				$bild_id = $GLOBALS['TL_CONFIG']['teamtournament_defaultImageWomen'];
+			}
+
+			// Foto generieren
+			$bild = '';
+			if($bild_id)
+			{
+				$objFile = \FilesModel::findByUuid($bild_id);
 				$imageSize = unserialize($objTurnier->imageSize_lineup);
 				$objBild = new \stdClass();
 				\Controller::addImageToTemplate($objBild, array('singleSRC' => $objFile->path, 'size' => $imageSize), \Config::get('maxImageWidth'), null, $objFile);

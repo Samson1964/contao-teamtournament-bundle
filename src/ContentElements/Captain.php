@@ -77,11 +77,26 @@ class Captain extends \ContentElement
 					if($weblink['url']) $links .= '<a href="'.$weblink['url'].'" target="_blank">'.$weblink['title'].'</a> ';
 				}
 			}
+
 			// Foto erstellen
-			$bild = '';
 			if($objMannschaft->singleSRC)
 			{
-				$objFile = \FilesModel::findByUuid($objMannschaft->singleSRC);
+				$bild_id = $objMannschaft->singleSRC;
+			}
+			elseif($objTurnier->gender == 'm')
+			{
+				$bild_id = $GLOBALS['TL_CONFIG']['teamtournament_defaultImageMen'];
+			}
+			elseif($objTurnier->gender == 'w')
+			{
+				$bild_id = $GLOBALS['TL_CONFIG']['teamtournament_defaultImageWomen'];
+			}
+
+			// Foto generieren
+			$bild = '';
+			if($bild_id)
+			{
+				$objFile = \FilesModel::findByUuid($bild);
 				$imageSize = unserialize($objTurnier->imageSize_lineup);
 				$objBild = new \stdClass();
 				\Controller::addImageToTemplate($objBild, array('singleSRC' => $objFile->path, 'size' => $imageSize), \Config::get('maxImageWidth'), null, $objFile);
