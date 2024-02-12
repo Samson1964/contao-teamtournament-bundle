@@ -6,6 +6,7 @@
 $GLOBALS['TL_LANG']['tl_teamtournament_teams']['name_legend'] = 'Mannschaft';
 $GLOBALS['TL_LANG']['tl_teamtournament_teams']['name'] = array('Mannschaftsname', 'Name der Mannschaft');
 $GLOBALS['TL_LANG']['tl_teamtournament_teams']['country'] = array('Land', 'Land der Mannschaft');
+$GLOBALS['TL_LANG']['tl_teamtournament_teams']['flag'] = array('Bild', 'Bild/Logo/Flagge der Mannschafts auswählen');
 
 $GLOBALS['TL_LANG']['tl_teamtournament_teams']['captain_legend'] = 'Kapitän';
 $GLOBALS['TL_LANG']['tl_teamtournament_teams']['prename'] = array('Vorname', 'Vorname des Mannschaftskapitäns');

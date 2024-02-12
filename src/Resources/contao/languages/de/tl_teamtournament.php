@@ -9,6 +9,7 @@
 // Eingabemaske
 $GLOBALS['TL_LANG']['tl_teamtournament']['title_legend'] = 'Turniername';
 $GLOBALS['TL_LANG']['tl_teamtournament']['title'] = array('Turniername', 'Turniername des Wettbewerbs');
+$GLOBALS['TL_LANG']['tl_teamtournament']['gender'] = array('Geschlecht', 'Standardgeschlecht der Spieler. Je nach voreinegstelltem Geschlecht wird das gesetzte Standardbild bei Spielern verwendet.');
 
 $GLOBALS['TL_LANG']['tl_teamtournament']['place_legend'] = 'Ort';
 $GLOBALS['TL_LANG']['tl_teamtournament']['place'] = array('Ort', 'Ort in dem der Wettbewerb stattfand');
@@ -30,6 +31,7 @@ $GLOBALS['TL_LANG']['tl_teamtournament']['complete'] = array('Komplett', 'Der We
 $GLOBALS['TL_LANG']['tl_teamtournament']['published'] = array('Veröffentlicht', 'Wettbewerb veröffentlicht');
 
 $GLOBALS['TL_LANG']['tl_teamtournament']['imageSize_legend'] = 'Bildgrößen';
+$GLOBALS['TL_LANG']['tl_teamtournament']['imageSize_flags'] = array('Bildgröße Mannschaften', 'Bildgröße für Mannschaften, z.B. in Paarungslisten');
 $GLOBALS['TL_LANG']['tl_teamtournament']['imageSize_lineup'] = array('Bildgröße Aufstellungen', 'Bildgröße in der Tabelle mit der Aufstellung');
 $GLOBALS['TL_LANG']['tl_teamtournament']['imageSize_results'] = array('Bildgröße Ergebnisse', 'Bildgröße in der Tabelle mit den Ergebnissen');
 

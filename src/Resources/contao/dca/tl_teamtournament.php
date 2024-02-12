@@ -122,7 +122,7 @@ $GLOBALS['TL_DCA']['tl_teamtournament'] = array
 	// Palettes
 	'palettes' => array
 	(
-		'default'                     => '{title_legend},title;{place_legend},place,country;{date_legend},fromDate,toDate;{language_legend},language;{info_legend:hide},info,source;{options_legend:hide},singleSRC,url;{imageSize_legend:hide},imageSize_lineup,imageSize_results;{publish_legend},complete,published'
+		'default'                     => '{title_legend},title,gender;{place_legend},place,country;{date_legend},fromDate,toDate;{language_legend},language;{info_legend:hide},info,source;{options_legend:hide},singleSRC,url;{imageSize_legend:hide},imageSize_flags,imageSize_lineup,imageSize_results;{publish_legend},complete,published'
 	),
 
 	// Fields
@@ -152,6 +152,22 @@ $GLOBALS['TL_DCA']['tl_teamtournament'] = array
 			),
 			'sql'                     => "varchar(255) NOT NULL default ''"
 		),
+		'gender' => array
+		(
+			'label'                   => &$GLOBALS['TL_LANG']['tl_teamtournament']['gender'],
+			'exclude'                 => true,
+			'filter'                  => true,
+			'default'                 => 'm',
+			'sorting'                 => true,
+			'flag'                    => 1,
+			'inputType'               => 'select',
+			'options'                 => array('m' => 'Männlich', 'w' => 'Weiblich'),
+			'eval'                    => array
+			(
+				'tl_class'            => 'w50'
+			),
+			'sql'                     => "varchar(1) NOT NULL default 'm'"
+		),  
 		'place' => array
 		(
 			'label'                   => &$GLOBALS['TL_LANG']['tl_teamtournament']['place'],
@@ -302,6 +318,26 @@ $GLOBALS['TL_DCA']['tl_teamtournament'] = array
 			'inputType'               => 'checkbox',
 			'sql'                     => "char(1) NOT NULL default ''"
 		),  
+		'imageSize_flags' => array
+		(
+			'label'                   => &$GLOBALS['TL_LANG']['tl_teamtournament']['imageSize_flags'],
+			'exclude'                 => true,
+			'inputType'               => 'imageSize',
+			'reference'               => &$GLOBALS['TL_LANG']['MSC'],
+			'eval'                    => array
+			(
+				'rgxp'                => 'natural',
+				'includeBlankOption'  => true,
+				'nospace'             => true,
+				'helpwizard'          => true,
+				'tl_class'            => 'w50'
+			),
+			'options_callback'        => static function ()
+			{
+				return System::getContainer()->get('contao.image.image_sizes')->getOptionsForUser(BackendUser::getInstance());
+			},
+			'sql'                     => "varchar(255) NOT NULL default ''"
+		),
 		'imageSize_lineup' => array
 		(
 			'label'                   => &$GLOBALS['TL_LANG']['tl_teamtournament']['imageSize_lineup'],

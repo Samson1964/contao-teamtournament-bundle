@@ -120,7 +120,7 @@ $GLOBALS['TL_DCA']['tl_teamtournament_teams'] = array
 	// Palettes
 	'palettes' => array
 	(
-		'default'                     => '{name_legend},name,country;{captain_legend:hide},prename,surname,birthday,fide_title,fide_id,fide_elo,dwz,singleSRC,weblinks;{publish_legend},published'
+		'default'                     => '{name_legend},name,country,flag;{captain_legend:hide},prename,surname,birthday,fide_title,fide_id,fide_elo,dwz,singleSRC,weblinks;{publish_legend},published'
 	),
 
 	// Fields
@@ -172,6 +172,14 @@ $GLOBALS['TL_DCA']['tl_teamtournament_teams'] = array
 				'tl_class'            => 'w50'
 			),
 			'sql'                     => "varchar(2) NOT NULL default ''"
+		),  
+		'flag' => array
+		(
+			'label'                   => &$GLOBALS['TL_LANG']['tl_teamtournament_teams']['flag'],
+			'exclude'                 => true,
+			'inputType'               => 'fileTree',
+			'eval'                    => array('filesOnly'=>true, 'fieldType'=>'radio', 'tl_class'=>'clr'),
+			'sql'                     => "binary(16) NULL",
 		),  
 		'surname' => array
 		(

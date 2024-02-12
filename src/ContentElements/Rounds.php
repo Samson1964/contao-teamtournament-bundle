@@ -36,11 +36,27 @@ class Rounds extends \ContentElement
 		                                           ->execute($this->teamtournament_turnier);
 		while($objMannschaften->next())
 		{
+			// Logo/Bild der Mannschaft generieren
+			$bild = '';
+			if($objMannschaften->flag)
+			{
+				$objFile = \FilesModel::findByUuid($objMannschaften->flag);
+				$imageSize = unserialize($objTurnier->imageSize_flags);
+				$objBild = new \stdClass();
+				\Controller::addImageToTemplate($objBild, array('singleSRC' => $objFile->path, 'size' => $imageSize), \Config::get('maxImageWidth'), null, $objFile);
+				$bild = '<figure class="image_container">';
+				$bild .= '<a href="'.$objBild->singleSRC.'" data-lightbox="tt'.$objSpieler->id.'"><img src="'.$objBild->src.'" alt="'.$objBild->alt.'" title="'.$objBild->imageTitle.'"></a>';
+				if($objBild->caption)
+				{
+					$bild .= '<figcaption class="caption">'.$objBild->caption.'</figcaption>';
+				}
+				$bild .= '</figure>';
+			}
 			$mannschaft[$objMannschaften->id] = array
 			(
 				'name'    => $objMannschaften->name,
 				'country' => $objMannschaften->country,
-				'flagge'  => '<span class="flag-icon flag-icon-'.$objMannschaften->country.'"></span>'
+				'flagge'  => $bild
 			);
 		}
 		// Spieler laden
@@ -49,10 +65,24 @@ class Rounds extends \ContentElement
 		while($objSpieler->next())
 		{
 			// Foto erstellen
-			$bild = '';
 			if($objSpieler->singleSRC)
 			{
-				$objFile = \FilesModel::findByUuid($objSpieler->singleSRC);
+				$bild_id = $objSpieler->singleSRC;
+			}
+			elseif($objTurnier->gender == 'm')
+			{
+				$bild_id = $GLOBALS['TL_CONFIG']['teamtournament_defaultImageMen'];
+			}
+			elseif($objTurnier->gender == 'w')
+			{
+				$bild_id = $GLOBALS['TL_CONFIG']['teamtournament_defaultImageWomen'];
+			}
+
+			// Foto generieren
+			$bild = '';
+			if($bild_id)
+			{
+				$objFile = \FilesModel::findByUuid($bild_id);
 				$imageSize = unserialize($objTurnier->imageSize_results);
 				$objBild = new \stdClass();
 				\Controller::addImageToTemplate($objBild, array('singleSRC' => $objFile->path, 'size' => $imageSize), \Config::get('maxImageWidth'), null, $objFile);
@@ -64,6 +94,8 @@ class Rounds extends \ContentElement
 				}
 				$bild .= '</figure>';
 			}
+
+			// Spielerdaten sichern
 			$spieler[$objSpieler->id] = array
 			(
 				'name'       => $objSpieler->prename.' '.$objSpieler->surname,
@@ -75,35 +107,43 @@ class Rounds extends \ContentElement
 		// Wettkämpfe der Runde laden
 		// $this->teamtournament_turnier = ID des Turniers
 		// $this->teamtournament_runde = Nummer der Runde
-		$objWettkaempfe = \Database::getInstance()->prepare("SELECT * FROM tl_teamtournament_matches WHERE pid=? AND round=? ORDER BY team1 ASC")
+		$objWettkaempfe = \Database::getInstance()->prepare("SELECT * FROM tl_teamtournament_matches WHERE pid=? AND round=? ORDER BY round ASC")
 		                                          ->execute($this->teamtournament_turnier, $this->teamtournament_runde);
 
 		$content ='';
 		$content .= '<table>';
+		$tisch = 0;
 		// Wettkämpfe durchgehen
 		while($objWettkaempfe->next())
 		{
+			$tisch++;
+			if($tisch > 1) {
+				// Leerzeile einbauen
+				$content .= '<tr class="empty">';
+				$content .= '<td class="empty" colspan="6">&nbsp;</td>';
+				$content .= '</tr>';
+			}
 			// Ergebnis bauen
 			$ergebnis = self::getErgebnis($objWettkaempfe->resultTeam1, $objWettkaempfe->resultTeam2);
 			// Kopfzeile mit den Mannschaften
-			$content .= '<tr>';
+			$content .= '<tr class="head">';
 			if($objTurnier->language == 'de')
 			{
-				$content .= '<th>Br.</th>';
-				$content .= '<th>'.$mannschaft[$objWettkaempfe->team1]['flagge'].' '.$mannschaft[$objWettkaempfe->team1]['name'].'</th>';
-				$content .= '<th>Elo</th>';
-				$content .= '<th>'.$ergebnis.'</th>';
-				$content .= '<th>'.$mannschaft[$objWettkaempfe->team2]['flagge'].' '.$mannschaft[$objWettkaempfe->team2]['name'].'</th>';
-				$content .= '<th>Elo</th>';
+				$content .= '<th class="board">Br.</th>';
+				$content .= '<th class="team">'.$mannschaft[$objWettkaempfe->team1]['flagge'].' '.$mannschaft[$objWettkaempfe->team1]['name'].'</th>';
+				$content .= '<th class="rating">Elo</th>';
+				$content .= '<th class="result">'.$ergebnis.'</th>';
+				$content .= '<th class="team">'.$mannschaft[$objWettkaempfe->team2]['flagge'].' '.$mannschaft[$objWettkaempfe->team2]['name'].'</th>';
+				$content .= '<th class="rating">Elo</th>';
 			}
 			elseif($objTurnier->language == 'en')
 			{
-				$content .= '<th>Bo.</th>';
-				$content .= '<th>'.$mannschaft[$objWettkaempfe->team1]['flagge'].' '.$mannschaft[$objWettkaempfe->team1]['name'].'</th>';
-				$content .= '<th>Elo</th>';
-				$content .= '<th>'.$ergebnis.'</th>';
-				$content .= '<th>'.$mannschaft[$objWettkaempfe->team2]['flagge'].' '.$mannschaft[$objWettkaempfe->team2]['name'].'</th>';
-				$content .= '<th>Elo</th>';
+				$content .= '<th class="board">Bo.</th>';
+				$content .= '<th class="team">'.$mannschaft[$objWettkaempfe->team1]['flagge'].' '.$mannschaft[$objWettkaempfe->team1]['name'].'</th>';
+				$content .= '<th class="rating">Elo</th>';
+				$content .= '<th class="result">'.$ergebnis.'</th>';
+				$content .= '<th class="team">'.$mannschaft[$objWettkaempfe->team2]['flagge'].' '.$mannschaft[$objWettkaempfe->team2]['name'].'</th>';
+				$content .= '<th class="rating">Elo</th>';
 			}
 			$content .= '</tr>';
 			
@@ -115,10 +155,10 @@ class Rounds extends \ContentElement
 				$content .= '<tr>';
 				$content .= '<td class="board">'.$objBretter->board.'</td>';
 				$content .= '<td class="player'.($objBretter->colors == 'w' ? ' white' : ' black').'">'.trim($spieler[$objBretter->player1]['bild'].' '.$spieler[$objBretter->player1]['fide_title'].' '.$spieler[$objBretter->player1]['name']).'</td>';
-				$content .= '<td class="elo">'.$spieler[$objBretter->player1]['fide_elo'].'</td>';
+				$content .= '<td class="rating">'.$spieler[$objBretter->player1]['fide_elo'].'</td>';
 				$content .= '<td class="result">'.$objBretter->result.'</td>';
 				$content .= '<td class="player'.($objBretter->colors == 'w' ? ' black' : ' white').'">'.trim($spieler[$objBretter->player2]['bild'].' '.$spieler[$objBretter->player2]['fide_title'].' '.$spieler[$objBretter->player2]['name']).'</td>';
-				$content .= '<td class="elo">'.$spieler[$objBretter->player2]['fide_elo'].'</td>';
+				$content .= '<td class="rating">'.$spieler[$objBretter->player2]['fide_elo'].'</td>';
 				$content .= '</tr>';
 			}
 		}
