@@ -96,7 +96,7 @@ class Captain extends \ContentElement
 			$bild = '';
 			if($bild_id)
 			{
-				$objFile = \FilesModel::findByUuid($bild);
+				$objFile = \FilesModel::findByUuid($bild_id);
 				$imageSize = unserialize($objTurnier->imageSize_lineup);
 				$objBild = new \stdClass();
 				\Controller::addImageToTemplate($objBild, array('singleSRC' => $objFile->path, 'size' => $imageSize), \Config::get('maxImageWidth'), null, $objFile);

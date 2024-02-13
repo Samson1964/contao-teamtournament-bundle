@@ -1,5 +1,9 @@
 # Mannschaftsturniere-Bundle Changelog
 
+## Version 0.1.5 (2024-02-13)
+
+* Fix: Bild des Kapitäns wurde nicht angezeigt.
+
 ## Version 0.1.4 (2024-02-12)
 
 * Add: Standardbilder in Aufstellungen + Kapitän
