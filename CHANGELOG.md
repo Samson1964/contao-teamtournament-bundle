@@ -1,5 +1,9 @@
 # Mannschaftsturniere-Bundle Changelog
 
+## Version 0.2.0 (2024-09-17)
+
+* Add: Abhängigkeit PHP 8
+
 ## Version 0.1.5 (2024-02-13)
 
 * Fix: Bild des Kapitäns wurde nicht angezeigt.
