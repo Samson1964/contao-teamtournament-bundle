@@ -21,3 +21,4 @@ $GLOBALS['TL_LANG']['tl_settings']['teamtournament_legend']                     
  */
 $GLOBALS['TL_LANG']['tl_settings']['teamtournament_defaultImageMen'] = array('Standardbild Männer', 'Standardbild für Listen mit männlichen Spielern');
 $GLOBALS['TL_LANG']['tl_settings']['teamtournament_defaultImageWomen'] = array('Standardbild Frauen', 'Standardbild für Listen mit weiblichen Spielern.');
+$GLOBALS['TL_LANG']['tl_settings']['teamtournament_css'] = array('Standard-CSS', 'Standard-CSS einbinden');

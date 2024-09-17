@@ -1,0 +1,49 @@
+/* ********************************************************* */
+/* Inhaltselement Mannschaftsturnier Paarung(en)             */
+/* ********************************************************* */
+
+.ce_tt-round table {
+	width: 100%;
+}
+
+.ce_tt-round .board {
+	width: 4%;
+}
+
+.ce_tt-round .team {
+	width: 35%;
+}
+
+.ce_tt-round .player.white {
+	background-color: #ffffff;
+}
+
+.ce_tt-round .player.black {
+	background-color: #C0C0C0;
+}
+
+.ce_tt-round .rating {
+	width: 8%;
+}
+
+.ce_tt-round .result {
+	width: 10%;
+	text-align: center;
+}
+
+.ce_tt-round figure {
+	float: left;
+	margin-right: 5px;
+}
+
+.ce_tt-round figcaption {
+	display: none;
+}
+
+.ce_tt-round td.board,
+.ce_tt-round td.player,
+.ce_tt-round td.rating,
+.ce_tt-round td.result {
+	font-weight: bold;
+	font-size: 16px;
+}

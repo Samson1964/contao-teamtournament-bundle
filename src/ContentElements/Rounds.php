@@ -69,11 +69,11 @@ class Rounds extends \ContentElement
 			{
 				$bild_id = $objSpieler->singleSRC;
 			}
-			elseif($objTurnier->gender == 'm')
+			elseif($objTurnier->gender == 'm' && isset($GLOBALS['TL_CONFIG']['teamtournament_defaultImageMen']))
 			{
 				$bild_id = $GLOBALS['TL_CONFIG']['teamtournament_defaultImageMen'];
 			}
-			elseif($objTurnier->gender == 'w')
+			elseif($objTurnier->gender == 'w' && isset($GLOBALS['TL_CONFIG']['teamtournament_defaultImageWomen']))
 			{
 				$bild_id = $GLOBALS['TL_CONFIG']['teamtournament_defaultImageWomen'];
 			}
@@ -83,16 +83,19 @@ class Rounds extends \ContentElement
 			if($bild_id)
 			{
 				$objFile = \FilesModel::findByUuid($bild_id);
-				$imageSize = unserialize($objTurnier->imageSize_results);
-				$objBild = new \stdClass();
-				\Controller::addImageToTemplate($objBild, array('singleSRC' => $objFile->path, 'size' => $imageSize), \Config::get('maxImageWidth'), null, $objFile);
-				$bild = '<figure class="image_container">';
-				$bild .= '<a href="'.$objBild->singleSRC.'" data-lightbox="tt'.$objSpieler->id.'"><img src="'.$objBild->src.'" alt="'.$objBild->alt.'" title="'.$objBild->imageTitle.'"></a>';
-				if($objBild->caption)
+				if($objFile)
 				{
-					$bild .= '<figcaption class="caption">'.$objBild->caption.'</figcaption>';
+					$imageSize = unserialize($objTurnier->imageSize_results);
+					$objBild = new \stdClass();
+					\Controller::addImageToTemplate($objBild, array('singleSRC' => $objFile->path, 'size' => $imageSize), \Config::get('maxImageWidth'), null, $objFile);
+					$bild = '<figure class="image_container">';
+					$bild .= '<a href="'.$objBild->singleSRC.'" data-lightbox="tt'.$objSpieler->id.'"><img src="'.$objBild->src.'" alt="'.$objBild->alt.'" title="'.$objBild->imageTitle.'"></a>';
+					if($objBild->caption)
+					{
+						$bild .= '<figcaption class="caption">'.$objBild->caption.'</figcaption>';
+					}
+					$bild .= '</figure>';
 				}
-				$bild .= '</figure>';
 			}
 
 			// Spielerdaten sichern

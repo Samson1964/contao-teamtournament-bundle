@@ -1,4 +1,4 @@
-<?php if (!defined('TL_ROOT')) die('You cannot access this file directly!');
+<?php
 
 /**
  * Contao Open Source CMS
@@ -14,7 +14,7 @@
 /**
  * palettes
  */
-$GLOBALS['TL_DCA']['tl_settings']['palettes']['default'] .= ';{teamtournament_legend:hide},teamtournament_defaultImageMen,teamtournament_defaultImageWomen';
+$GLOBALS['TL_DCA']['tl_settings']['palettes']['default'] .= ';{teamtournament_legend:hide},teamtournament_defaultImageMen,teamtournament_defaultImageWomen,teamtournament_css';
 
 /**
  * fields
@@ -41,5 +41,15 @@ $GLOBALS['TL_DCA']['tl_settings']['fields']['teamtournament_defaultImageWomen'] 
 		'filesOnly'           => true,
 		'fieldType'           => 'radio',
 		'tl_class'            => 'w50'
+	)
+);
+
+$GLOBALS['TL_DCA']['tl_settings']['fields']['teamtournament_css'] = array
+(
+	'label'         => &$GLOBALS['TL_LANG']['tl_settings']['teamtournament_css'],
+	'inputType'     => 'checkbox',
+	'eval'          => array
+	(
+		'tl_class'  => 'w50 clr',
 	)
 );

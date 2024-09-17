@@ -207,6 +207,14 @@ $GLOBALS['TL_DCA']['tl_teamtournament_matches'] = array
 				'maxlength'           => 10,
 				'tl_class'            => 'w50'
 			),
+			'load_callback'           => array
+			(
+				array('tl_teamtournament_matches', 'getPoints')
+			),
+			'save_callback' => array
+			(
+				array('tl_teamtournament_matches', 'putPoints')
+			),
 			'sql'                     => "varchar(10) NOT NULL default ''"
 		),
 		'resultTeam2' => array
@@ -221,6 +229,14 @@ $GLOBALS['TL_DCA']['tl_teamtournament_matches'] = array
 				'mandatory'           => false,
 				'maxlength'           => 10,
 				'tl_class'            => 'w50'
+			),
+			'load_callback'           => array
+			(
+				array('tl_teamtournament_matches', 'getPoints')
+			),
+			'save_callback' => array
+			(
+				array('tl_teamtournament_matches', 'putPoints')
 			),
 			'sql'                     => "varchar(10) NOT NULL default ''"
 		),
@@ -287,7 +303,7 @@ class tl_teamtournament_matches extends Backend
 
 	public function getTeams(\DataContainer $dc)
 	{
-		if(!$this->teams)
+		if(!$this->teams && isset($dc->activeRecord->pid))
 		{
 			$objForms = \Database::getInstance()->prepare("SELECT * FROM tl_teamtournament_teams WHERE pid=? ORDER BY name ASC")
 			                                    ->execute($dc->activeRecord->pid);
@@ -299,5 +315,25 @@ class tl_teamtournament_matches extends Backend
 		return $this->teams;
 
 	}
+
+	/**
+	 * Punktewert aus Datenbank umwandeln
+	 * @param mixed
+	 * @return mixed
+	 */
+	public function getPoints($varValue)
+	{
+		return str_replace('.', ',', sprintf('%01.1f', $varValue));
+	}
+
+	/**
+	 * Punktewert für Datenbank umwandeln
+	 * @param mixed
+	 * @return mixed
+	 */
+	public function putPoints($varValue)
+	{
+		return str_replace(',', '.', $varValue);
+	} 
 
 }

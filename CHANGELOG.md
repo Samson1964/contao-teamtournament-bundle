@@ -1,5 +1,14 @@
 # Mannschaftsturniere-Bundle Changelog
 
+## Version 0.2.1 (2024-09-17)
+
+* Change: tl_content.teamtournament_runde von 9 auf 19 Runden erweitert
+* Fix: Warning: Attempt to read property "pid" on null in /contao/dca/tl_teamtournament_matches.php (line 293) 
+* Fix: Warning: Attempt to read property "path" on null in /ContentElements/Rounds.php (line 88) -> Bild fehlt
+* Fix: Warning: Undefined array key "teamtournament_defaultImageMen" in ContentElements/Rounds.php (line 74) 
+* Add: Funktion getPoints/putPoints in tl_teamtournament_matches um Eingaben mit Komma zu ermöglichen
+* Add: tl_settings.teamtournament_css für das Aktivieren des Standard-CSS
+
 ## Version 0.2.0 (2024-09-17)
 
 * Add: Abhängigkeit PHP 8
