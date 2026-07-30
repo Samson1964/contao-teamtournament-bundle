@@ -1,7 +1,14 @@
 {
     "name": "schachbulle/contao-teamtournament-bundle",
     "type": "contao-bundle",
-    "description": "Mannschaftsturniere-Bundle für Contao 4",
+    "description": "Verwaltet Schach-Mannschaftsturniere mit Mannschaften, Paarungen und Ergebnissen.",
+    "keywords": [
+        "contao",
+        "schach",
+        "mannschaft",
+        "turnier"
+    ],
+    "homepage": "https://github.com/Samson1964/contao-teamtournament-bundle",
     "license": "LGPL-3.0-or-later",
     "authors": [
         {
