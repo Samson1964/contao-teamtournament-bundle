@@ -1,25 +1,29 @@
 <?php
 
-/**
- * Contao Open Source CMS
+declare(strict_types=1);
+
+/*
+ * Mannschaftsturniere für Contao Open Source CMS
  *
- * Copyright (c) 2005-2014 Leo Feyer
- *
- * @package News
- * @link    https://contao.org
- * @license http://www.gnu.org/licenses/lgpl-3.0.html LGPL
+ * @author    Frank Hoppe
+ * @license   LGPL-3.0-or-later
  */
 
-/**
- * Table tl_teamtournament_games
+use Contao\Backend;
+use Contao\DataContainer;
+use Contao\Database;
+use Contao\DC_Table;
+use Contao\Input;
+
+/*
+ * Datenbereich tl_teamtournament_games
  */
 $GLOBALS['TL_DCA']['tl_teamtournament_games'] = array
 (
-
-	// Config
+	// Grundeinstellungen
 	'config' => array
 	(
-		'dataContainer'               => 'Table',
+		'dataContainer'               => DC_Table::class,
 		'ptable'                      => 'tl_teamtournament_matches',
 		'switchToEdit'                => true,
 		'enableVersioning'            => true,
@@ -27,19 +31,20 @@ $GLOBALS['TL_DCA']['tl_teamtournament_games'] = array
 		(
 			'keys' => array
 			(
-				'id' => 'primary',
+				'id'  => 'primary',
 				'pid' => 'index',
 			)
 		)
 	),
 
-	// List
+	// Listenansicht
 	'list' => array
 	(
 		'sorting' => array
 		(
-			'mode'                    => 4,
+			'mode'                    => DataContainer::MODE_PARENT,
 			'disableGrouping'         => true,
+			'fields'                  => array('board ASC'),
 			'headerFields'            => array('team1', 'team2', 'round', 'board'),
 			'panelLayout'             => 'filter;sort,search,limit',
 			'child_record_callback'   => array('tl_teamtournament_games', 'listGames'),
@@ -60,57 +65,53 @@ $GLOBALS['TL_DCA']['tl_teamtournament_games'] = array
 			(
 				'label'               => &$GLOBALS['TL_LANG']['tl_teamtournament_games']['edit'],
 				'href'                => 'act=edit',
-				'icon'                => 'edit.gif',
+				'icon'                => 'edit.svg',
 			),
 			'copy' => array
 			(
 				'label'               => &$GLOBALS['TL_LANG']['tl_teamtournament_games']['copy'],
 				'href'                => 'act=paste&amp;mode=copy',
-				'icon'                => 'copy.gif'
+				'icon'                => 'copy.svg'
 			),
 			'cut' => array
 			(
 				'label'               => &$GLOBALS['TL_LANG']['tl_teamtournament_games']['cut'],
 				'href'                => 'act=paste&amp;mode=cut',
-				'icon'                => 'cut.gif'
+				'icon'                => 'cut.svg'
 			),
 			'delete' => array
 			(
 				'label'               => &$GLOBALS['TL_LANG']['tl_teamtournament_games']['delete'],
 				'href'                => 'act=delete',
-				'icon'                => 'delete.gif',
+				'icon'                => 'delete.svg',
+				// Der DcaLoader lädt die Sprachdateien noch nicht, deshalb der
+				// abgesicherte Lesezugriff
 				'attributes'          => 'onclick="if(!confirm(\'' . ($GLOBALS['TL_LANG']['MSC']['deleteConfirm'] ?? null) . '\'))return false;Backend.getScrollOffset()"'
 			),
+			// Umschalter ohne codefog/contao-haste, siehe tl_teamtournament
 			'toggle' => array
 			(
-				'label'                => &$GLOBALS['TL_LANG']['tl_teamtournament_games']['toggle'],
-				'attributes'           => 'onclick="Backend.getScrollOffset()"',
-				'haste_ajax_operation' => array
-				(
-					'field'            => 'published',
-					'options'          => array
-					(
-						array('value' => '', 'icon' => 'invisible.svg'),
-						array('value' => '1', 'icon' => 'visible.svg'),
-					),
-				),
+				'label'               => &$GLOBALS['TL_LANG']['tl_teamtournament_games']['toggle'],
+				'href'                => 'act=toggle&amp;field=published',
+				'icon'                => 'visible.svg',
+				'attributes'          => 'onclick="Backend.getScrollOffset()"'
 			),
 			'show' => array
 			(
 				'label'               => &$GLOBALS['TL_LANG']['tl_teamtournament_games']['show'],
 				'href'                => 'act=show',
-				'icon'                => 'show.gif'
+				'icon'                => 'show.svg'
 			)
 		)
 	),
 
-	// Palettes
+	// Paletten
 	'palettes' => array
 	(
 		'default'                     => '{player_legend},player1,player2;{results_legend},board,colors,result;{pgn_legend},pgn;{publish_legend},published'
 	),
 
-	// Fields
+	// Felder
 	'fields' => array
 	(
 		'id' => array
@@ -163,6 +164,8 @@ $GLOBALS['TL_DCA']['tl_teamtournament_games'] = array
 		(
 			'label'                   => &$GLOBALS['TL_LANG']['tl_teamtournament_games']['board'],
 			'exclude'                 => true,
+			'sorting'                 => true,
+			'flag'                    => DataContainer::SORT_ASC,
 			'inputType'               => 'text',
 			'eval'                    => array
 			(
@@ -175,10 +178,10 @@ $GLOBALS['TL_DCA']['tl_teamtournament_games'] = array
 		),
 		'colors' => array
 		(
-			'label'                 => &$GLOBALS['TL_LANG']['tl_teamtournament_games']['colors'],
+			'label'                   => &$GLOBALS['TL_LANG']['tl_teamtournament_games']['colors'],
 			'exclude'                 => true,
 			'filter'                  => true,
-			'flag'                    => 1,
+			'flag'                    => DataContainer::SORT_INITIAL_LETTER_ASC,
 			'default'                 => '',
 			'inputType'               => 'select',
 			'options_callback'        => array('tl_teamtournament_games', 'getColors'),
@@ -221,9 +224,11 @@ $GLOBALS['TL_DCA']['tl_teamtournament_games'] = array
 			'label'                   => &$GLOBALS['TL_LANG']['tl_teamtournament_games']['published'],
 			'exclude'                 => true,
 			'filter'                  => true,
-			'flag'                    => 1,
+			'flag'                    => DataContainer::SORT_INITIAL_LETTER_ASC,
 			'default'                 => 1,
 			'inputType'               => 'checkbox',
+			// Schaltet den Ajax-Umschalter in der Listenansicht frei
+			'toggle'                  => true,
 			'eval'                    => array
 			(
 				'doNotCopy'           => true
@@ -233,105 +238,189 @@ $GLOBALS['TL_DCA']['tl_teamtournament_games'] = array
 	)
 );
 
-
 /**
- * Class tl_teamtournament_games
+ * Rückrufe des Datenbereichs tl_teamtournament_games.
  *
- * Provide miscellaneous methods that are used by the data configuration array.
- * @copyright  Leo Feyer 2005-2014
- * @author     Leo Feyer <https://contao.org>
- * @package    News
+ * Die Klasse erbt von Contao\Backend, weil Contao 5 keine globalen
+ * Klassenaliasse mehr registriert.
  */
 class tl_teamtournament_games extends Backend
 {
-
 	/**
-	 * Import the back end user object
+	 * Erzeugt die Rückrufklasse.
+	 *
+	 * In Contao 4.13 ist Backend::__construct() als protected deklariert, erst
+	 * Contao 5 macht ihn öffentlich; ohne diese Überschreibung ließe sich die
+	 * Klasse dort von außerhalb der Contao-Klassenhierarchie nicht erzeugen.
 	 */
 	public function __construct()
 	{
 		parent::__construct();
-		$this->import('BackendUser', 'User');
 	}
 
-	public function listGames($arrRow)
+	/**
+	 * Beschriftet eine Partie in der Listenansicht.
+	 *
+	 * @param array<string, mixed> $arrRow Der Datensatz aus tl_teamtournament_games
+	 *
+	 * @return string Brettnummer, beide Spieler und das Ergebnis
+	 */
+	public function listGames($arrRow): string
 	{
 		$temp = '<div class="tl_content_left">';
 		$temp .= '<b>'.$arrRow['board'].'</b> ';
-		// Spielernamen
 		$temp .= $this->getPlayerName($arrRow['player1']);
 		$temp .= $arrRow['result'] ? ' '.$arrRow['result'].' ' : ' - ';
 		$temp .= $this->getPlayerName($arrRow['player2']);
+
 		return $temp.'</div>';
 	}
 
-	public function getPlayerName($id)
+	/**
+	 * Liefert den Namen eines Spielers.
+	 *
+	 * @param mixed $id Kennung des Spielers aus tl_teamtournament_players
+	 *
+	 * @return string Vor- und Nachname; ist der Spieler unbekannt, die
+	 *                übergebene Kennung, damit in der Liste wenigstens etwas steht
+	 */
+	public function getPlayerName($id): string
 	{
+		$objPlayer = Database::getInstance()
+			->prepare("SELECT prename, surname FROM tl_teamtournament_players WHERE id=?")
+			->execute($id);
 
-		$objPlayer = \Database::getInstance()->prepare("SELECT * FROM tl_teamtournament_players WHERE id=?")
-		                                     ->execute($id);
-
-		if($objPlayer->numRows == 1) return $objPlayer->prename.' '.$objPlayer->surname;
-		else return $id;
-
-	}
-
-	public function getPlayerTeam1(\DataContainer $dc)
-	{
-
-		$arrForms = array();
-		$objWettkampf = \Database::getInstance()->prepare("SELECT * FROM tl_teamtournament_matches WHERE id=?")
-		                                        ->execute($dc->activeRecord->pid);
-		$objSpieler = \Database::getInstance()->prepare("SELECT * FROM tl_teamtournament_players WHERE pid=?")
-		                                      ->execute($objWettkampf->team1);
-
-		while($objSpieler->next())
+		if (!$objPlayer->numRows)
 		{
-			$arrForms[$objSpieler->id] = $objSpieler->prename.' '.$objSpieler->surname;
+			return (string) $id;
 		}
 
-		return $arrForms;
+		return trim($objPlayer->prename.' '.$objPlayer->surname);
 	}
 
-	public function getPlayerTeam2(\DataContainer $dc)
+	/**
+	 * Liefert die Spieler der ersten Mannschaft als Auswahlliste.
+	 *
+	 * @param DataContainer $dc Der aufrufende Data Container
+	 *
+	 * @return array<int, string> Spielerkennung => Name
+	 */
+	public function getPlayerTeam1(DataContainer $dc): array
 	{
+		return $this->ladeSpieler($dc, 'team1');
+	}
 
-		$arrForms = array();
-		$objWettkampf = \Database::getInstance()->prepare("SELECT * FROM tl_teamtournament_matches WHERE id=?")
-		                                        ->execute($dc->activeRecord->pid);
-		$objSpieler = \Database::getInstance()->prepare("SELECT * FROM tl_teamtournament_players WHERE pid=?")
-		                                      ->execute($objWettkampf->team2);
+	/**
+	 * Liefert die Spieler der zweiten Mannschaft als Auswahlliste.
+	 *
+	 * @param DataContainer $dc Der aufrufende Data Container
+	 *
+	 * @return array<int, string> Spielerkennung => Name
+	 */
+	public function getPlayerTeam2(DataContainer $dc): array
+	{
+		return $this->ladeSpieler($dc, 'team2');
+	}
 
-		while($objSpieler->next())
+	/**
+	 * Liest die Spieler einer der beiden Mannschaften des Wettkampfes ein.
+	 *
+	 * Der Wettkampf wird über den Datensatz der Partie ermittelt, beim Anlegen
+	 * über den Parameter pid der Adresse. Der frühere Weg über
+	 * $dc->activeRecord->pid lief bei einer neu angelegten Partie in einen
+	 * Fehler, weil dort noch kein Datensatz vorliegt; ab Contao 5 gilt der
+	 * Zugriff außerdem als veraltet.
+	 *
+	 * @param DataContainer $dc      Der aufrufende Data Container
+	 * @param string        $strFeld 'team1' oder 'team2'
+	 *
+	 * @return array<int, string> Spielerkennung => Name; leer, wenn sich der
+	 *                            Wettkampf nicht ermitteln ließ
+	 */
+	private function ladeSpieler(DataContainer $dc, string $strFeld): array
+	{
+		$arrSpieler = array();
+		$intWettkampf = 0;
+
+		if ($dc->id)
 		{
-			$arrForms[$objSpieler->id] = $objSpieler->prename.' '.$objSpieler->surname;
+			$objPartie = Database::getInstance()
+				->prepare("SELECT pid FROM tl_teamtournament_games WHERE id=?")
+				->execute($dc->id);
+
+			if ($objPartie->numRows)
+			{
+				$intWettkampf = (int) $objPartie->pid;
+			}
 		}
 
-		return $arrForms;
+		if (!$intWettkampf && Input::get('pid'))
+		{
+			$intWettkampf = (int) Input::get('pid');
+		}
+
+		if (!$intWettkampf)
+		{
+			return $arrSpieler;
+		}
+
+		$objWettkampf = Database::getInstance()
+			->prepare("SELECT team1, team2 FROM tl_teamtournament_matches WHERE id=?")
+			->execute($intWettkampf);
+
+		if (!$objWettkampf->numRows)
+		{
+			return $arrSpieler;
+		}
+
+		$objSpieler = Database::getInstance()
+			->prepare("SELECT id, prename, surname FROM tl_teamtournament_players WHERE pid=? ORDER BY board ASC, surname ASC")
+			->execute($objWettkampf->$strFeld);
+
+		while ($objSpieler->next())
+		{
+			$arrSpieler[$objSpieler->id] = trim($objSpieler->prename.' '.$objSpieler->surname);
+		}
+
+		return $arrSpieler;
 	}
 
-	public function getResults(\DataContainer $dc)
+	/**
+	 * Liefert die möglichen Partieergebnisse.
+	 *
+	 * @param DataContainer $dc Der aufrufende Data Container, hier ungenutzt
+	 *
+	 * @return array<string, string> Ergebnis => Beschriftung
+	 */
+	public function getResults(DataContainer $dc): array
 	{
-		$arrForms = array
+		return array
 		(
-			'1:0'  => '1:0',
-			'0:1'  => '0:1',
-			'½:½'  => '½:½',
-			'+:-'  => '+:-',
-			'-:+'  => '-:+',
-			'-:-'  => '-:-'
+			'1:0' => '1:0',
+			'0:1' => '0:1',
+			'½:½' => '½:½',
+			'+:-' => '+:-',
+			'-:+' => '-:+',
+			'-:-' => '-:-'
 		);
-		return $arrForms;
 	}
 
-	public function getColors(\DataContainer $dc)
+	/**
+	 * Liefert die Farbverteilung am ersten Brett.
+	 *
+	 * Die Angabe gilt für den Spieler der ersten Mannschaft; der Gegner hat
+	 * jeweils die andere Farbe.
+	 *
+	 * @param DataContainer $dc Der aufrufende Data Container, hier ungenutzt
+	 *
+	 * @return array<string, string> Kürzel => Beschriftung
+	 */
+	public function getColors(DataContainer $dc): array
 	{
-		$arrForms = array
+		return array
 		(
-			'w'   => 'Weiß',
-			's'   => 'Schwarz'
+			'w' => 'Weiß',
+			's' => 'Schwarz'
 		);
-		return $arrForms;
 	}
-
 }

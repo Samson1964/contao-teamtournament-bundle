@@ -1,26 +1,33 @@
 <?php
 
-/**
- * Contao Open Source CMS
+declare(strict_types=1);
+
+/*
+ * Mannschaftsturniere für Contao Open Source CMS
  *
- * Copyright (c) 2005-2014 Leo Feyer
- *
- * @package News
- * @link    https://contao.org
- * @license http://www.gnu.org/licenses/lgpl-3.0.html LGPL
+ * @author    Frank Hoppe
+ * @license   LGPL-3.0-or-later
  */
 
+use Contao\Backend;
+use Contao\BackendUser;
+use Contao\DataContainer;
+use Contao\DC_Table;
+use Contao\Image;
+use Contao\StringUtil;
+use Contao\System;
 
-/**
- * Table tl_teamtournament
+/*
+ * Datenbereich tl_teamtournament
  */
 $GLOBALS['TL_DCA']['tl_teamtournament'] = array
 (
-
-	// Config
+	// Grundeinstellungen
 	'config' => array
 	(
-		'dataContainer'               => 'Table',
+		// Der Kurzname 'Table' ist in Contao 5 entfallen; der voll
+		// qualifizierte Klassenname gilt in beiden Fassungen
+		'dataContainer'               => DC_Table::class,
 		'ctable'                      => array('tl_teamtournament_teams', 'tl_teamtournament_matches'),
 		'switchToEdit'                => true,
 		'enableVersioning'            => true,
@@ -33,14 +40,14 @@ $GLOBALS['TL_DCA']['tl_teamtournament'] = array
 		)
 	),
 
-	// List
+	// Listenansicht
 	'list' => array
 	(
 		'sorting' => array
 		(
-			'mode'                    => 2,
+			'mode'                    => DataContainer::MODE_SORTABLE,
 			'fields'                  => array('toDate DESC'),
-			'flag'                    => 1,
+			'flag'                    => DataContainer::SORT_INITIAL_LETTER_ASC,
 			'panelLayout'             => 'sort,filter;search,limit',
 		),
 		'label' => array
@@ -66,13 +73,13 @@ $GLOBALS['TL_DCA']['tl_teamtournament'] = array
 			(
 				'label'               => &$GLOBALS['TL_LANG']['tl_teamtournament']['edit'],
 				'href'                => 'table=tl_teamtournament_teams',
-				'icon'                => 'edit.gif'
+				'icon'                => 'edit.svg'
 			),
 			'editheader' => array
 			(
 				'label'               => &$GLOBALS['TL_LANG']['tl_teamtournament']['editheader'],
 				'href'                => 'act=edit',
-				'icon'                => 'header.gif',
+				'icon'                => 'header.svg',
 				'button_callback'     => array('tl_teamtournament', 'editHeader')
 			),
 			'matches' => array
@@ -85,47 +92,47 @@ $GLOBALS['TL_DCA']['tl_teamtournament'] = array
 			(
 				'label'               => &$GLOBALS['TL_LANG']['tl_teamtournament']['copy'],
 				'href'                => 'act=copy',
-				'icon'                => 'copy.gif',
+				'icon'                => 'copy.svg',
 				'button_callback'     => array('tl_teamtournament', 'copyArchive')
 			),
 			'delete' => array
 			(
 				'label'               => &$GLOBALS['TL_LANG']['tl_teamtournament']['delete'],
 				'href'                => 'act=delete',
-				'icon'                => 'delete.gif',
+				'icon'                => 'delete.svg',
+				// Der DcaLoader lädt die Sprachdateien noch nicht, deshalb der
+				// abgesicherte Lesezugriff — sonst meldet contao:migrate eine
+				// fehlende Feldbelegung
 				'attributes'          => 'onclick="if(!confirm(\'' . ($GLOBALS['TL_LANG']['MSC']['deleteConfirm'] ?? null) . '\'))return false;Backend.getScrollOffset()"',
 				'button_callback'     => array('tl_teamtournament', 'deleteArchive')
 			),
+			// Der Umschalter kommt ohne codefog/contao-haste aus: "act=toggle"
+			// zusammen mit 'toggle' => true am Feld published wird von
+			// Contao 4.13 wie von Contao 5 selbsttätig als Ajax-Umschalter mit
+			// wechselndem Symbol gerendert
 			'toggle' => array
 			(
-				'label'                => &$GLOBALS['TL_LANG']['tl_teamtournament']['toggle'],
-				'attributes'           => 'onclick="Backend.getScrollOffset()"',
-				'haste_ajax_operation' => array
-				(
-					'field'            => 'published',
-					'options'          => array
-					(
-						array('value' => '', 'icon' => 'invisible.svg'),
-						array('value' => '1', 'icon' => 'visible.svg'),
-					),
-				),
+				'label'               => &$GLOBALS['TL_LANG']['tl_teamtournament']['toggle'],
+				'href'                => 'act=toggle&amp;field=published',
+				'icon'                => 'visible.svg',
+				'attributes'          => 'onclick="Backend.getScrollOffset()"'
 			),
 			'show' => array
 			(
 				'label'               => &$GLOBALS['TL_LANG']['tl_teamtournament']['show'],
 				'href'                => 'act=show',
-				'icon'                => 'show.gif'
+				'icon'                => 'show.svg'
 			)
 		)
 	),
 
-	// Palettes
+	// Paletten
 	'palettes' => array
 	(
 		'default'                     => '{title_legend},title,gender;{place_legend},place,country;{date_legend},fromDate,toDate;{language_legend},language;{info_legend:hide},info,source;{options_legend:hide},singleSRC,url;{imageSize_legend:hide},imageSize_flags,imageSize_lineup,imageSize_results;{publish_legend},complete,published'
 	),
 
-	// Fields
+	// Felder
 	'fields' => array
 	(
 		'id' => array
@@ -142,11 +149,11 @@ $GLOBALS['TL_DCA']['tl_teamtournament'] = array
 			'exclude'                 => true,
 			'search'                  => true,
 			'sorting'                 => true,
-			'flag'                    => 1,
+			'flag'                    => DataContainer::SORT_INITIAL_LETTER_ASC,
 			'inputType'               => 'text',
 			'eval'                    => array
 			(
-				'mandatory'           => true, 
+				'mandatory'           => true,
 				'maxlength'           => 255,
 				'tl_class'            => 'w50'
 			),
@@ -159,7 +166,7 @@ $GLOBALS['TL_DCA']['tl_teamtournament'] = array
 			'filter'                  => true,
 			'default'                 => 'm',
 			'sorting'                 => true,
-			'flag'                    => 1,
+			'flag'                    => DataContainer::SORT_INITIAL_LETTER_ASC,
 			'inputType'               => 'select',
 			'options'                 => array('m' => 'Männlich', 'w' => 'Weiblich'),
 			'eval'                    => array
@@ -167,7 +174,7 @@ $GLOBALS['TL_DCA']['tl_teamtournament'] = array
 				'tl_class'            => 'w50'
 			),
 			'sql'                     => "varchar(1) NOT NULL default 'm'"
-		),  
+		),
 		'place' => array
 		(
 			'label'                   => &$GLOBALS['TL_LANG']['tl_teamtournament']['place'],
@@ -175,11 +182,11 @@ $GLOBALS['TL_DCA']['tl_teamtournament'] = array
 			'search'                  => true,
 			'filter'                  => true,
 			'sorting'                 => true,
-			'flag'                    => 1,
+			'flag'                    => DataContainer::SORT_INITIAL_LETTER_ASC,
 			'inputType'               => 'text',
 			'eval'                    => array
 			(
-				'mandatory'           => false, 
+				'mandatory'           => false,
 				'maxlength'           => 255,
 				'tl_class'            => 'w50'
 			),
@@ -191,17 +198,17 @@ $GLOBALS['TL_DCA']['tl_teamtournament'] = array
 			'exclude'                 => true,
 			'filter'                  => true,
 			'sorting'                 => true,
-			'flag'                    => 1,
+			'flag'                    => DataContainer::SORT_INITIAL_LETTER_ASC,
 			'inputType'               => 'select',
-			'options'                 => System::getCountries(),
+			'options_callback'        => array('tl_teamtournament', 'getLaender'),
 			'eval'                    => array
 			(
-				'includeBlankOption'  => true, 
-				'chosen'              => true, 
+				'includeBlankOption'  => true,
+				'chosen'              => true,
 				'tl_class'            => 'w50'
 			),
 			'sql'                     => "varchar(2) NOT NULL default ''"
-		),  
+		),
 		'fromDate' => array
 		(
 			'label'                   => &$GLOBALS['TL_LANG']['tl_teamtournament']['fromDate'],
@@ -211,7 +218,7 @@ $GLOBALS['TL_DCA']['tl_teamtournament'] = array
 			'inputType'               => 'text',
 			'eval'                    => array
 			(
-				'mandatory'           => true, 
+				'mandatory'           => true,
 				'maxlength'           => 10,
 				'tl_class'            => 'w50',
 				'rgxp'                => 'alnum'
@@ -225,7 +232,7 @@ $GLOBALS['TL_DCA']['tl_teamtournament'] = array
 				array('tl_teamtournament', 'putDate')
 			),
 			'sql'                     => "int(8) unsigned NOT NULL default '0'"
-		), 
+		),
 		'toDate' => array
 		(
 			'label'                   => &$GLOBALS['TL_LANG']['tl_teamtournament']['toDate'],
@@ -233,7 +240,7 @@ $GLOBALS['TL_DCA']['tl_teamtournament'] = array
 			'exclude'                 => true,
 			'search'                  => true,
 			'sorting'                 => true,
-			'flag'                    => 2,
+			'flag'                    => DataContainer::SORT_INITIAL_LETTER_DESC,
 			'inputType'               => 'text',
 			'eval'                    => array
 			(
@@ -250,7 +257,7 @@ $GLOBALS['TL_DCA']['tl_teamtournament'] = array
 				array('tl_teamtournament', 'putDate')
 			),
 			'sql'                     => "int(8) unsigned NOT NULL default '0'"
-		),  
+		),
 		'info' => array
 		(
 			'label'                   => &$GLOBALS['TL_LANG']['tl_teamtournament']['info'],
@@ -260,7 +267,7 @@ $GLOBALS['TL_DCA']['tl_teamtournament'] = array
 			'eval'                    => array('rte'=>'tinyMCE', 'helpwizard'=>true, 'tl_class'=>'clr'),
 			'explanation'             => 'insertTags',
 			'sql'                     => "mediumtext NULL"
-		),  
+		),
 		'source' => array
 		(
 			'label'                   => &$GLOBALS['TL_LANG']['tl_teamtournament']['source'],
@@ -269,7 +276,7 @@ $GLOBALS['TL_DCA']['tl_teamtournament'] = array
 			'inputType'               => 'text',
 			'eval'                    => array('maxlength'=>255, 'tl_class'=>'long'),
 			'sql'                     => "varchar(255) NOT NULL default ''"
-		), 
+		),
 		'singleSRC' => array
 		(
 			'label'                   => &$GLOBALS['TL_LANG']['tl_teamtournament']['singleSRC'],
@@ -277,33 +284,33 @@ $GLOBALS['TL_DCA']['tl_teamtournament'] = array
 			'inputType'               => 'fileTree',
 			'eval'                    => array('filesOnly'=>true, 'fieldType'=>'radio', 'tl_class'=>'clr'),
 			'sql'                     => "binary(16) NULL",
-		),  
+		),
 		'url' => array
 		(
 			'label'                   => &$GLOBALS['TL_LANG']['tl_teamtournament']['url'],
 			'exclude'                 => true,
 			'search'                  => true,
 			'inputType'               => 'text',
-			'eval'                    => array('rgxp'=>'url', 'decodeEntities'=>true, 'maxlength'=>255, 'fieldType'=>'radio', 'tl_class'=>'clr w50 wizard'),
-			'wizard' => array
-			(
-				array('tl_teamtournament', 'pagePicker')
-			),
+			// 'dcaPicker' ersetzt den früheren pagePicker-Wizard. Der zeigte auf
+			// contao/page.php — eine Adresse aus Contao 3, die es seit Contao 4
+			// nicht mehr gibt; der Knopf führte also ins Leere. Den Schalter
+			// kennen Contao 4.13 und Contao 5 gleichermaßen.
+			'eval'                    => array('rgxp'=>'url', 'decodeEntities'=>true, 'maxlength'=>255, 'dcaPicker'=>true, 'tl_class'=>'clr w50 wizard'),
 			'sql'                     => "varchar(255) NOT NULL default ''"
-		), 
+		),
 		'language' => array
 		(
 			'label'                   => &$GLOBALS['TL_LANG']['tl_teamtournament']['language'],
 			'exclude'                 => true,
 			'search'                  => true,
 			'sorting'                 => true,
-			'flag'                    => 1,
+			'flag'                    => DataContainer::SORT_INITIAL_LETTER_ASC,
 			'inputType'               => 'select',
 			'options'                 => array('de', 'en'),
 			'reference'               => &$GLOBALS['TL_LANG']['tl_teamtournament']['language_options'],
 			'eval'                    => array
 			(
-				'mandatory'           => true, 
+				'mandatory'           => true,
 				'tl_class'            => 'w50'
 			),
 			'sql'                     => "varchar(2) NOT NULL default ''"
@@ -313,11 +320,11 @@ $GLOBALS['TL_DCA']['tl_teamtournament'] = array
 			'label'                   => &$GLOBALS['TL_LANG']['tl_teamtournament']['complete'],
 			'exclude'                 => true,
 			'filter'                  => true,
-			'flag'                    => 1,
-			'default'                 => false,
+			'flag'                    => DataContainer::SORT_INITIAL_LETTER_ASC,
+			'default'                 => '',
 			'inputType'               => 'checkbox',
 			'sql'                     => "char(1) NOT NULL default ''"
-		),  
+		),
 		'imageSize_flags' => array
 		(
 			'label'                   => &$GLOBALS['TL_LANG']['tl_teamtournament']['imageSize_flags'],
@@ -332,10 +339,7 @@ $GLOBALS['TL_DCA']['tl_teamtournament'] = array
 				'helpwizard'          => true,
 				'tl_class'            => 'w50'
 			),
-			'options_callback'        => static function ()
-			{
-				return System::getContainer()->get('contao.image.image_sizes')->getOptionsForUser(BackendUser::getInstance());
-			},
+			'options_callback'        => array('tl_teamtournament', 'getBildgroessen'),
 			'sql'                     => "varchar(255) NOT NULL default ''"
 		),
 		'imageSize_lineup' => array
@@ -352,10 +356,7 @@ $GLOBALS['TL_DCA']['tl_teamtournament'] = array
 				'helpwizard'          => true,
 				'tl_class'            => 'w50'
 			),
-			'options_callback'        => static function ()
-			{
-				return System::getContainer()->get('contao.image.image_sizes')->getOptionsForUser(BackendUser::getInstance());
-			},
+			'options_callback'        => array('tl_teamtournament', 'getBildgroessen'),
 			'sql'                     => "varchar(255) NOT NULL default ''"
 		),
 		'imageSize_results' => array
@@ -372,10 +373,7 @@ $GLOBALS['TL_DCA']['tl_teamtournament'] = array
 				'helpwizard'          => true,
 				'tl_class'            => 'w50 clr'
 			),
-			'options_callback'        => static function ()
-			{
-				return System::getContainer()->get('contao.image.image_sizes')->getOptionsForUser(BackendUser::getInstance());
-			},
+			'options_callback'        => array('tl_teamtournament', 'getBildgroessen'),
 			'sql'                     => "varchar(255) NOT NULL default ''"
 		),
 		'published' => array
@@ -383,164 +381,272 @@ $GLOBALS['TL_DCA']['tl_teamtournament'] = array
 			'label'                   => &$GLOBALS['TL_LANG']['tl_teamtournament']['published'],
 			'exclude'                 => true,
 			'filter'                  => true,
-			'flag'                    => 1,
-			'default'                 => true,
+			'flag'                    => DataContainer::SORT_INITIAL_LETTER_ASC,
+			'default'                 => 1,
 			'inputType'               => 'checkbox',
+			// Schaltet den Ajax-Umschalter in der Listenansicht frei
+			'toggle'                  => true,
 			'eval'                    => array
 			(
 				'doNotCopy'           => true
 			),
 			'sql'                     => "char(1) NOT NULL default ''"
-		),  
+		),
 	)
 );
 
-
 /**
- * Class tl_teamtournament
+ * Rückrufe des Datenbereichs tl_teamtournament.
  *
- * Provide miscellaneous methods that are used by the data configuration array.
- * @copyright  Leo Feyer 2005-2014
- * @author     Leo Feyer <https://contao.org>
- * @package    News
+ * Die Klasse erbt von Contao\Backend, weil Contao 5 keine globalen
+ * Klassenaliasse mehr registriert; ein blankes "extends Backend" bräche dort
+ * mit einem Fatal error ab.
  */
 class tl_teamtournament extends Backend
 {
-
 	/**
-	 * Import the back end user object
+	 * Erzeugt die Rückrufklasse.
+	 *
+	 * Der Konstruktor sieht überflüssig aus, ist es aber nicht: In Contao 4.13
+	 * ist Backend::__construct() als protected deklariert, erst Contao 5 macht
+	 * ihn öffentlich. Ohne diese Überschreibung ließe sich die Klasse unter
+	 * Contao 4.13 von außerhalb der Contao-Klassenhierarchie nicht erzeugen.
+	 *
+	 * Der frühere Aufruf $this->import('BackendUser', 'User') ist entfallen:
+	 * Unter Contao 5 bricht System::import() mit einem unqualifizierten
+	 * Klassennamen ab. Die Rückrufe holen den Benutzer jetzt selbst über
+	 * BackendUser::getInstance().
 	 */
 	public function __construct()
 	{
 		parent::__construct();
-		$this->import('BackendUser', 'User');
 	}
 
 	/**
-	 * Return the edit header button
-	 * @param array
-	 * @param string
-	 * @param string
-	 * @param string
-	 * @param string
-	 * @param string
-	 * @return string
+	 * Liefert die Länderliste für die Auswahl des Austragungslandes.
+	 *
+	 * Ersetzt das frühere System::getCountries(), das es in Contao 5 nicht mehr
+	 * gibt. Wichtig ist das Kleinschreiben der Schlüssel: Der Dienst gibt sie
+	 * groß zurück ('DE'), die alte Methode hatte sie klein gemacht ('de') — und
+	 * genau so stehen sie in den vorhandenen Datensätzen. Ohne die Umwandlung
+	 * fände die Auswahlliste den gespeicherten Wert nicht wieder.
+	 *
+	 * @return array<string, string> Länderkürzel in Kleinschreibung => Name des
+	 *                               Landes in der Sprache des Backends
 	 */
-	public function editHeader($row, $href, $label, $title, $icon, $attributes)
+	public function getLaender(): array
 	{
-		return ($this->User->isAdmin || count(preg_grep('/^tl_teamtournament::/', $this->User->alexf)) > 0) ? '<a href="'.$this->addToUrl($href.'&amp;id='.$row['id']).'" title="'.specialchars($title).'"'.$attributes.'>'.Image::getHtml($icon, $label).'</a> ' : Image::getHtml(preg_replace('/\.gif$/i', '_.gif', $icon)).' ';
-	}
+		$arrCountries = System::getContainer()->get('contao.intl.countries')->getCountries();
 
-
-	/**
-	 * Return the copy archive button
-	 * @param array
-	 * @param string
-	 * @param string
-	 * @param string
-	 * @param string
-	 * @param string
-	 * @return string
-	 */
-	public function copyArchive($row, $href, $label, $title, $icon, $attributes)
-	{
-		return ($this->User->isAdmin || $this->User->hasAccess('create', 'newp')) ? '<a href="'.$this->addToUrl($href.'&amp;id='.$row['id']).'" title="'.specialchars($title).'"'.$attributes.'>'.Image::getHtml($icon, $label).'</a> ' : Image::getHtml(preg_replace('/\.gif$/i', '_.gif', $icon)).' ';
-	}
-
-
-	/**
-	 * Return the delete archive button
-	 * @param array
-	 * @param string
-	 * @param string
-	 * @param string
-	 * @param string
-	 * @param string
-	 * @return string
-	 */
-	public function deleteArchive($row, $href, $label, $title, $icon, $attributes)
-	{
-		return ($this->User->isAdmin || $this->User->hasAccess('delete', 'newp')) ? '<a href="'.$this->addToUrl($href.'&amp;id='.$row['id']).'" title="'.specialchars($title).'"'.$attributes.'>'.Image::getHtml($icon, $label).'</a> ' : Image::getHtml(preg_replace('/\.gif$/i', '_.gif', $icon)).' ';
+		return array_combine(array_map('strtolower', array_keys($arrCountries)), $arrCountries);
 	}
 
 	/**
-	 * Return the link picker wizard
-	 * @param \DataContainer
-	 * @return string
+	 * Liefert die im System hinterlegten Bildgrößen als Auswahlliste.
+	 *
+	 * Beschränkt auf die Größen, die der angemeldete Benutzer sehen darf. Der
+	 * Dienst heißt seit Contao 5 "contao.image.sizes"; unter Contao 4.13 ist
+	 * "contao.image.image_sizes" nur noch ein Alias darauf, der alte Name führt
+	 * in Contao 5 dagegen zu einem Fehler.
+	 *
+	 * @return array<string, mixed> Die Bildgrößen, nach Gruppen sortiert
 	 */
-	public function pagePicker(DataContainer $dc)
+	public function getBildgroessen(): array
 	{
-		return ' <a href="contao/page.php?do=' . Input::get('do') . '&amp;table=' . $dc->table . '&amp;field=' . $dc->field . '&amp;value=' . str_replace(array('{{link_url::', '}}'), '', $dc->value) . '" title="' . specialchars($GLOBALS['TL_LANG']['MSC']['pagepicker']) . '" onclick="Backend.getScrollOffset();Backend.openModalSelector({\'width\':765,\'title\':\'' . specialchars(str_replace("'", "\\'", $GLOBALS['TL_LANG']['MOD']['page'][0])) . '\',\'url\':this.href,\'id\':\'' . $dc->field . '\',\'tag\':\'ctrl_'. $dc->field . ((Input::get('act') == 'editAll') ? '_' . $dc->id : '') . '\',\'self\':this});return false">' . Image::getHtml('pickpage.gif', $GLOBALS['TL_LANG']['MSC']['pagepicker'], 'style="vertical-align:top;cursor:pointer"') . '</a>';
-	} 
+		return System::getContainer()->get('contao.image.sizes')->getOptionsForUser(BackendUser::getInstance());
+	}
 
 	/**
-	 * Datumswert aus Datenbank umwandeln
-	 * @param mixed
-	 * @return mixed
+	 * Zeigt den Knopf „Turnier bearbeiten" nur bei ausreichenden Rechten.
+	 *
+	 * Sichtbar ist er für Administratoren und für Benutzer, denen mindestens
+	 * ein Feld dieser Tabelle freigegeben ist. Andernfalls erscheint das
+	 * ausgegraute Symbol, das beide Contao-Fassungen als «header_.svg»
+	 * mitbringen.
+	 *
+	 * Die alte Rückruf-Signatur wird von Contao 5 weiterhin bedient: Dort prüft
+	 * der Operations-Erzeuger, ob der Rückruf genau einen Parameter vom Typ
+	 * DataContainerOperation erwartet, und geht sonst den bisherigen Weg mit
+	 * den Einzelwerten.
+	 *
+	 * @param array<string, mixed> $row        Der Datensatz aus tl_teamtournament
+	 * @param string               $href       Ziel der Operation
+	 * @param string               $label      Beschriftung aus der Sprachdatei
+	 * @param string               $title      Titel-Attribut des Verweises
+	 * @param string               $icon       Pfad des Symbols aus der DCA
+	 * @param string               $attributes Weitere Attribute des Verweises
+	 *
+	 * @return string Der Verweis als Markup, oder das ausgegraute Symbol
 	 */
-	public function getDate($varValue)
+	public function editHeader($row, $href, $label, $title, $icon, $attributes): string
 	{
-		$laenge = strlen($varValue);
-		$temp = '';
-		switch($laenge)
+		$objUser = BackendUser::getInstance();
+		$blnErlaubt = $objUser->isAdmin || \count(preg_grep('/^tl_teamtournament::/', (array) $objUser->alexf)) > 0;
+
+		return $this->generateButton($blnErlaubt, $row, $href, $label, $title, $icon, $attributes);
+	}
+
+	/**
+	 * Zeigt den Knopf „Turnier kopieren" nur bei ausreichenden Rechten.
+	 *
+	 * @param array<string, mixed> $row        Der Datensatz aus tl_teamtournament
+	 * @param string               $href       Ziel der Operation
+	 * @param string               $label      Beschriftung aus der Sprachdatei
+	 * @param string               $title      Titel-Attribut des Verweises
+	 * @param string               $icon       Pfad des Symbols aus der DCA
+	 * @param string               $attributes Weitere Attribute des Verweises
+	 *
+	 * @return string Der Verweis als Markup, oder das ausgegraute Symbol
+	 */
+	public function copyArchive($row, $href, $label, $title, $icon, $attributes): string
+	{
+		$objUser = BackendUser::getInstance();
+
+		return $this->generateButton($objUser->isAdmin || $objUser->hasAccess('create', 'newp'), $row, $href, $label, $title, $icon, $attributes);
+	}
+
+	/**
+	 * Zeigt den Knopf „Turnier löschen" nur bei ausreichenden Rechten.
+	 *
+	 * @param array<string, mixed> $row        Der Datensatz aus tl_teamtournament
+	 * @param string               $href       Ziel der Operation
+	 * @param string               $label      Beschriftung aus der Sprachdatei
+	 * @param string               $title      Titel-Attribut des Verweises
+	 * @param string               $icon       Pfad des Symbols aus der DCA
+	 * @param string               $attributes Weitere Attribute des Verweises
+	 *
+	 * @return string Der Verweis als Markup, oder das ausgegraute Symbol
+	 */
+	public function deleteArchive($row, $href, $label, $title, $icon, $attributes): string
+	{
+		$objUser = BackendUser::getInstance();
+
+		return $this->generateButton($objUser->isAdmin || $objUser->hasAccess('delete', 'newp'), $row, $href, $label, $title, $icon, $attributes);
+	}
+
+	/**
+	 * Baut das Markup einer rechteabhängigen Operation.
+	 *
+	 * Die drei Rückrufe oben unterschieden sich nur in der Rechteprüfung; der
+	 * Rest war dreimal dieselbe lange Zeile.
+	 *
+	 * @param bool                 $blnErlaubt Ergebnis der Rechteprüfung
+	 * @param array<string, mixed> $row        Der Datensatz aus tl_teamtournament
+	 * @param string               $href       Ziel der Operation
+	 * @param string               $label      Beschriftung aus der Sprachdatei
+	 * @param string               $title      Titel-Attribut des Verweises
+	 * @param string               $icon       Pfad des Symbols aus der DCA
+	 * @param string               $attributes Weitere Attribute des Verweises
+	 *
+	 * @return string Der anklickbare Verweis, oder das ausgegraute Symbol ohne
+	 *                Verweis
+	 */
+	private function generateButton(bool $blnErlaubt, $row, $href, $label, $title, $icon, $attributes): string
+	{
+		if (!$blnErlaubt)
+		{
+			// Beide Fassungen bringen zu jedem Operationssymbol eine
+			// ausgegraute Ausführung mit angehängtem Unterstrich mit
+			return Image::getHtml(preg_replace('/\.(gif|svg)$/i', '_.svg', $icon)).' ';
+		}
+
+		return '<a href="'.self::addToUrl($href.'&amp;id='.$row['id']).'" title="'.StringUtil::specialchars($title).'"'.$attributes.'>'.Image::getHtml($icon, $label).'</a> ';
+	}
+
+	/**
+	 * Wandelt einen Datumswert aus der Datenbank in die Anzeigeform um.
+	 *
+	 * Die Turnierdaten liegen als Zahl JJJJMMTT vor, unvollständige Angaben
+	 * entsprechend kürzer (JJJJMM oder JJJJ).
+	 *
+	 * Bewusst nicht über Schachbulle\ContaoHelperBundle\Classes\Helper: Dessen
+	 * getDate()/putDate() füllen fehlende Stellen mit Nullen auf (2026 wird zu
+	 * 20260000), während hier seit jeher die kürzere Zahl gespeichert wurde.
+	 * Ein Wechsel würde die vorhandenen Turnierdaten falsch lesen.
+	 *
+	 * @param mixed $varValue Der Wert aus der Datenbank
+	 *
+	 * @return string Das Datum als 'TT.MM.JJJJ', 'MM.JJJJ' oder 'JJJJ'; eine
+	 *                leere Zeichenkette bei jeder anderen Länge
+	 */
+	public function getDate($varValue): string
+	{
+		// Je nach Datenbanktreiber kommt der Wert als int oder als String;
+		// strlen() und substr() verlangen unter strict_types einen String
+		$strRoh = (string) $varValue;
+
+		switch (\strlen($strRoh))
 		{
 			case 8: // JJJJMMTT
-				$temp = substr($varValue,6,2).'.'.substr($varValue,4,2).'.'.substr($varValue,0,4);
-				break;
-			case 6: // JJJJMM
-				$temp = substr($varValue,4,2).'.'.substr($varValue,0,4);
-				break;
-			case 4: // JJJJ
-				$temp = $varValue;
-				break;
-			default: // anderer Wert
-				$temp = '';
-		}
+				return substr($strRoh, 6, 2).'.'.substr($strRoh, 4, 2).'.'.substr($strRoh, 0, 4);
 
-		return $temp;
+			case 6: // JJJJMM
+				return substr($strRoh, 4, 2).'.'.substr($strRoh, 0, 4);
+
+			case 4: // JJJJ
+				return $strRoh;
+
+			default:
+				return '';
+		}
 	}
 
 	/**
-	 * Datumswert für Datenbank umwandeln
-	 * @param mixed
-	 * @return mixed
+	 * Wandelt ein eingegebenes Datum in die Datenbankschreibweise um.
+	 *
+	 * Gegenstück zu getDate(); erkannt wird die Form allein an der Länge.
+	 *
+	 * @param mixed $varValue Die Eingabe aus der Maske
+	 *
+	 * @return string Das Datum als JJJJMMTT, JJJJMM oder JJJJ; '0' bei jeder
+	 *                anderen Länge, also auch bei leerer Eingabe
 	 */
-	public function putDate($varValue)
+	public function putDate($varValue): string
 	{
-		$laenge = strlen(trim($varValue));
-		$temp = '';
-		switch($laenge)
+		$strRoh = trim((string) $varValue);
+
+		switch (\strlen($strRoh))
 		{
 			case 10: // TT.MM.JJJJ
-				$temp = substr($varValue,6,4).substr($varValue,3,2).substr($varValue,0,2);
-				break;
-			case 7: // MM.JJJJ
-				$temp = substr($varValue,3,4).substr($varValue,0,2);
-				break;
-			case 4: // JJJJ
-				$temp = $varValue;
-				break;
-			default: // anderer Wert
-				$temp = 0;
-		}
+				return substr($strRoh, 6, 4).substr($strRoh, 3, 2).substr($strRoh, 0, 2);
 
-		return $temp;
-	} 
+			case 7: // MM.JJJJ
+				return substr($strRoh, 3, 4).substr($strRoh, 0, 2);
+
+			case 4: // JJJJ
+				return $strRoh;
+
+			default:
+				return '0';
+		}
+	}
 
 	/**
-	 * Listenansicht manipulieren
-	 * @param array
-	 * @param string
-	 * @param \DataContainer
-	 * @param array
-	 * @return string
+	 * Bereitet die Spalten der Listenansicht auf.
+	 *
+	 * Das Enddatum steht in der Datenbank als Zahl und wird lesbar gemacht, der
+	 * Titel fett gesetzt und der Haken „Wettbewerb komplett" als Symbol
+	 * ausgegeben.
+	 *
+	 * @param array<string, mixed> $row   Der Datensatz aus tl_teamtournament
+	 * @param string               $label Die vorbereitete Beschriftung, hier ungenutzt
+	 * @param DataContainer        $dc    Der aufrufende Data Container, hier ungenutzt
+	 * @param array<int, string>   $args  Die Spalteninhalte in der Reihenfolge der
+	 *                                    list.label.fields
+	 *
+	 * @return array<int, string> Die geänderten Spalteninhalte
 	 */
-	public function listTournaments($row, $label, DataContainer $dc, $args)
+	public function listTournaments($row, $label, DataContainer $dc, $args): array
 	{
 		$args[0] = $this->getDate($args[0]);
 		$args[1] = '<b>'.$args[1].'</b>';
-		$args[4] = $row['complete'] ? $this->generateImage('ok.gif', 'Wettbewerb komplett') : $this->generateImage('delete.gif', 'Wettbewerb nicht komplett');
+
+		// Controller::generateImage() gibt es in Contao 5 nicht mehr,
+		// Image::getHtml() dagegen in beiden Fassungen
+		$args[4] = $row['complete']
+			? Image::getHtml('ok.svg', 'Wettbewerb komplett')
+			: Image::getHtml('delete.svg', 'Wettbewerb nicht komplett');
+
 		return $args;
 	}
-
 }

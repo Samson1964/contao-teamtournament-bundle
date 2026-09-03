@@ -1,9 +1,14 @@
+# Dienstbeschreibung der Mannschaftsturniere
+#
+# Das Bundle kommt ohne eigene Dienste aus: Die Inhaltselemente laufen als
+# klassische ContentElement-Klassen über $GLOBALS['TL_CTE'], die DCA-Rückrufe
+# über die Klassennamen in den DCA-Dateien.
+#
+# Der frühere Eintrag "_instanceof" auf Symfony\Component\DependencyInjection\
+# ContainerAwareInterface ist entfallen: Die Schnittstelle gibt es in Symfony 7
+# (Contao 5) nicht mehr.
 services:
-    _instanceof:
-        Contao\CoreBundle\Framework\FrameworkAwareInterface:
-            calls:
-                - ["setFramework", ["@contao.framework"]]
-
-        Symfony\Component\DependencyInjection\ContainerAwareInterface:
-            calls:
-                - ["setContainer", ["@service_container"]]
+    _defaults:
+        autowire: true
+        autoconfigure: true
+        public: false

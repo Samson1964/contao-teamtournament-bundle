@@ -1,171 +1,122 @@
 <?php
 
-/**
- * Contao Open Source CMS
+declare(strict_types=1);
+
+/*
+ * Mannschaftsturniere für Contao Open Source CMS
  *
- * Copyright (C) 2005-2013 Leo Feyer
- *
- * @package   chesstable
- * Version    1.0.0
  * @author    Frank Hoppe
- * @license   GNU/LGPL
- * @copyright Frank Hoppe 2013
+ * @license   LGPL-3.0-or-later
  */
 
 namespace Schachbulle\ContaoTeamtournamentBundle\ContentElements;
 
-class Captain extends \ContentElement
-{
+use Contao\ContentElement;
+use Contao\Database;
+use Contao\StringUtil;
+use Schachbulle\ContaoHelperBundle\Classes\Helper;
+use Schachbulle\ContaoTeamtournamentBundle\Classes\Helfer;
 
+/**
+ * Inhaltselement „Mannschaftsführer".
+ *
+ * Gibt den Kapitän einer Mannschaft mit Foto, Alter, Elo-Zahl und Weblinks
+ * aus. Die Daten des Kapitäns stehen nicht in der Spielertabelle, sondern
+ * unmittelbar am Datensatz der Mannschaft.
+ */
+class Captain extends ContentElement
+{
+	/**
+	 * Name des Frontend-Templates.
+	 *
+	 * @var string
+	 */
 	protected $strTemplate = 'ce_tt-captain';
 
 	/**
-	 * Generate the module
+	 * Baut die Tabelle mit dem Mannschaftsführer zusammen.
+	 *
+	 * Ist an der Mannschaft kein Nachname hinterlegt, gilt der Kapitän als
+	 * nicht benannt und es erscheint nur die Kopfzeile. Fehlt die Mannschaft
+	 * ganz, bleibt die Ausgabe leer.
 	 */
 	protected function compile()
 	{
+		$objMannschaft = Database::getInstance()
+			->prepare("SELECT * FROM tl_teamtournament_teams WHERE id=?")
+			->execute($this->teamtournament_lineup);
 
-		// Symlink für das externe Bundle components/flag-icon-css erstellen, wenn noch nicht vorhanden
-		if(!is_link(TL_ROOT.'/web/bundles/flag-icon-css')) symlink(TL_ROOT.'/vendor/components/flag-icon-css/', TL_ROOT.'/web/bundles/flag-icon-css'); // Ziel, Name
+		if (!$objMannschaft->numRows)
+		{
+			$this->Template->content = '';
 
-		// Mannschaft laden
-		$objMannschaft = \Database::getInstance()->prepare("SELECT * FROM tl_teamtournament_teams WHERE id=?")
-		                                         ->execute($this->teamtournament_lineup);
-		// Turnier laden
-		$objTurnier = \Database::getInstance()->prepare("SELECT * FROM tl_teamtournament WHERE id=?")
-		                                      ->execute($objMannschaft->pid);
-		
-		$content ='';
-		$content .= '<table>';
+			return;
+		}
+
+		$objTurnier = Database::getInstance()
+			->prepare("SELECT * FROM tl_teamtournament WHERE id=?")
+			->execute($objMannschaft->pid);
+
+		$content = '<table>';
 		$content .= '<tr>';
-		if($objTurnier->language == 'de')
-		{
-			$content .= '<th>Foto</th>';
-			$content .= '<th>Kapitän</th>';
-			$content .= '<th>Alter</th>';
-			$content .= '<th>Elo</th>';
-			$content .= '<th>Weblinks</th>';
-		}
-		elseif($objTurnier->language == 'en')
-		{
-			$content .= '<th>Photo</th>';
-			$content .= '<th>Captain</th>';
-			$content .= '<th>Age</th>';
-			$content .= '<th>Elo</th>';
-			$content .= '<th>Weblinks</th>';
-		}
-		$content .= '</tr>';
-		// Kapitän ausgeben
-		if($objMannschaft->surname)
-		{
-			// Alter ermitteln anhand Turnierbeginn
-			$geburtsdatum = \Schachbulle\ContaoHelperBundle\Classes\Helper::getDate($objMannschaft->birthday);
-			$turnierdatum = \Schachbulle\ContaoHelperBundle\Classes\Helper::getDate($objTurnier->fromDate);
-			$alter = self::getAlter($geburtsdatum, $turnierdatum);
-			// Name zusammensetzen
-			$name = '';
-			if($objMannschaft->fide_title) $name .= $objMannschaft->fide_title.' ';
-			if($objMannschaft->prename) $name .= $objMannschaft->prename.' ';
-			if($objMannschaft->surname) $name .= $objMannschaft->surname;
-			// Weblinks erstellen
-			$weblinks = unserialize($objMannschaft->weblinks);
-			$links = '';
-			if(is_array($weblinks))
-			{
-				foreach($weblinks as $weblink)
-				{
-					if($weblink['url']) $links .= '<a href="'.$weblink['url'].'" target="_blank">'.$weblink['title'].'</a> ';
-				}
-			}
 
-			// Foto erstellen
-			if($objMannschaft->singleSRC)
-			{
-				$bild_id = $objMannschaft->singleSRC;
-			}
-			elseif($objTurnier->gender == 'm')
-			{
-				$bild_id = $GLOBALS['TL_CONFIG']['teamtournament_defaultImageMen'];
-			}
-			elseif($objTurnier->gender == 'w')
-			{
-				$bild_id = $GLOBALS['TL_CONFIG']['teamtournament_defaultImageWomen'];
-			}
-
-			// Foto generieren
-			$bild = '';
-			if($bild_id)
-			{
-				$objFile = \FilesModel::findByUuid($bild_id);
-				$imageSize = unserialize($objTurnier->imageSize_lineup);
-				$objBild = new \stdClass();
-				\Controller::addImageToTemplate($objBild, array('singleSRC' => $objFile->path, 'size' => $imageSize), \Config::get('maxImageWidth'), null, $objFile);
-				$bild = '<figure class="image_container">';
-				$bild .= '<a href="'.$objBild->singleSRC.'" data-lightbox="tt'.$objSpieler->id.'"><img src="'.$objBild->src.'" alt="'.$objBild->alt.'" title="'.$objBild->imageTitle.'"></a>';
-				if($objBild->caption)
-				{
-					$bild .= '<figcaption class="caption">'.$objBild->caption.'</figcaption>';
-				}
-				$bild .= '</figure>';
-			}
-		
-			$content .= '<tr>';
-			$content .= '<td>'.$bild.'</td>';
-			$content .= '<td>'.trim($name).'</td>';
-			$content .= '<td>'.$alter.'</td>';
-			$content .= '<td><a href="https://ratings.fide.com/profile/'.$objMannschaft->fide_id.'">'.$objMannschaft->fide_elo.'</a></td>';
-			$content .= '<td>'.$links.'</td>';
-			$content .= '</tr>';
-		}
-		$content .= '</table>';
-
-		// Template ausgeben
-		$this->Template->content = $content;
-		return;
-
-	}
-
-	/**
-	 * Funktion getAlter
-	 *
-	 * Ermittelt das Alter in Jahren vom Geburtsdatum bis zum Referenzdatum
-	 *
-	 * @geburtsdatum   string       TT.MM.JJJJ oder MM.JJJJ oder JJJJ
-	 * @referenzdatum  string       TT.MM.JJJJ
-	 * @return         integer      Alter in Jahren
-	 */
-	function getAlter($geburtsdatum, $referenzdatum)
-	{
-		// Geburtsdatum analysieren
-		$col = explode('.', trim($geburtsdatum)); // String mit Datum zerlegen
-		if(count($col) == 1)
+		if ($objTurnier->language == 'en')
 		{
-			// Nur JJJJ übergeben
-			$geburtstag = $col[0].'0101';
-		}
-		elseif(count($col) == 2)
-		{
-			// Nur MM.JJJJ übergeben
-			$geburtstag = $col[1].$col[0].'01';
-		}
-		elseif(count($col) == 3)
-		{
-			// TT.MM.JJJJ übergeben
-			$geburtstag = $col[2].$col[1].$col[0];
+			$content .= '<th>Photo</th><th>Captain</th><th>Age</th><th>Elo</th><th>Weblinks</th>';
 		}
 		else
 		{
-			return false;
+			$content .= '<th>Foto</th><th>Kapitän</th><th>Alter</th><th>Elo</th><th>Weblinks</th>';
 		}
 
-		// Referenzdatum konvertieren
-		$col = explode('.', trim($referenzdatum)); // String mit Datum zerlegen
-		$referenztag = $col[2].$col[1].$col[0];
+		$content .= '</tr>';
 
-		//$geburtstag = date('Ymd', mktime(0, 0, 0, (int)substr($string, 3, 2), (int)substr($string, 0, 2), (int)substr($string, 6, 4)));
-		$alter = floor(($referenztag - $geburtstag) / 10000);
-		return $alter;
+		if ($objMannschaft->surname)
+		{
+			// Alter zum ersten Turniertag; beide Datumswerte liegen in der
+			// Datenbank als Zahl JJJJMMTT und müssen erst lesbar gemacht werden
+			$alter = Helfer::alter(
+				(string) Helper::getDate($objMannschaft->birthday),
+				(string) Helper::getDate($objTurnier->fromDate)
+			);
+
+			$name = trim($objMannschaft->fide_title.' '.$objMannschaft->prename.' '.$objMannschaft->surname);
+
+			// Weblinks aus dem MultiColumnWizard
+			$weblinks = StringUtil::deserialize($objMannschaft->weblinks);
+			$links = '';
+
+			if (\is_array($weblinks))
+			{
+				foreach ($weblinks as $weblink)
+				{
+					if (!empty($weblink['url']))
+					{
+						$links .= '<a href="'.$weblink['url'].'" target="_blank" rel="noopener">'.$weblink['title'].'</a> ';
+					}
+				}
+			}
+
+			// Foto: eigenes Bild des Kapitäns, sonst das Standardbild aus den
+			// Einstellungen, passend zum Geschlecht des Turniers
+			$bild_id = $objMannschaft->singleSRC ?: Helfer::standardbild($objTurnier->gender);
+
+			// Die Lightbox-Gruppe hieß hier früher 'tt'.$objSpieler->id — eine
+			// Variable, die es in dieser Klasse gar nicht gibt. Richtig ist die
+			// Kennung der Mannschaft.
+			$bild = Helfer::bild($bild_id, $objTurnier->imageSize_lineup, 'tt'.$objMannschaft->id);
+
+			$content .= '<tr>';
+			$content .= '<td>'.$bild.'</td>';
+			$content .= '<td>'.$name.'</td>';
+			$content .= '<td>'.$alter.'</td>';
+			$content .= '<td><a href="https://ratings.fide.com/profile/'.$objMannschaft->fide_id.'">'.$objMannschaft->fide_elo.'</a></td>';
+			$content .= '<td>'.trim($links).'</td>';
+			$content .= '</tr>';
+		}
+
+		$content .= '</table>';
+
+		$this->Template->content = $content;
 	}
-
-	
 }

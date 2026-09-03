@@ -30,6 +30,7 @@ $GLOBALS['TL_LANG']['tl_teamtournament_matches']['new'] = array('Neuer Wettkampf
 $GLOBALS['TL_LANG']['tl_teamtournament_matches']['edit'] = array('Bretter des Wettkampfs bearbeiten', 'Bretter des Wettkampfs %s bearbeiten');
 $GLOBALS['TL_LANG']['tl_teamtournament_matches']['editHeader'] = array('Wettkampf bearbeiten', 'Wettkampf %s bearbeiten');
 $GLOBALS['TL_LANG']['tl_teamtournament_matches']['copy'] = array('Wettkampf kopieren', 'Wettkampf %s kopieren');
+$GLOBALS['TL_LANG']['tl_teamtournament_matches']['cut'] = array('Wettkampf verschieben', 'Wettkampf %s verschieben');
 $GLOBALS['TL_LANG']['tl_teamtournament_matches']['delete'] = array('Wettkampf löschen', 'Wettkampf %s löschen');
 $GLOBALS['TL_LANG']['tl_teamtournament_matches']['toggle'] = array('Wettkampf aktivieren/deaktivieren', 'Wettkampf %s aktivieren/deaktivieren');
 $GLOBALS['TL_LANG']['tl_teamtournament_matches']['show'] = array('Wettkampfdetails anzeigen', 'Details des Wettkampfs %s anzeigen');

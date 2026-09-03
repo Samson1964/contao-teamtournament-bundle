@@ -5,3 +5,7 @@
 
 # PhpUnit
 /phpunit.xml
+/.phpunit.result.cache
+
+# Private Arbeitsnotiz
+/TODO.md

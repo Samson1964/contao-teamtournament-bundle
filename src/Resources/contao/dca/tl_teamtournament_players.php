@@ -1,25 +1,28 @@
 <?php
 
-/**
- * Contao Open Source CMS
+declare(strict_types=1);
+
+/*
+ * Mannschaftsturniere für Contao Open Source CMS
  *
- * Copyright (c) 2005-2014 Leo Feyer
- *
- * @package News
- * @link    https://contao.org
- * @license http://www.gnu.org/licenses/lgpl-3.0.html LGPL
+ * @author    Frank Hoppe
+ * @license   LGPL-3.0-or-later
  */
 
-/**
- * Table tl_teamtournament_players
+use Contao\Backend;
+use Contao\DataContainer;
+use Contao\DC_Table;
+use Schachbulle\ContaoHelperBundle\Classes\Helper;
+
+/*
+ * Datenbereich tl_teamtournament_players
  */
 $GLOBALS['TL_DCA']['tl_teamtournament_players'] = array
 (
-
-	// Config
+	// Grundeinstellungen
 	'config' => array
 	(
-		'dataContainer'               => 'Table',
+		'dataContainer'               => DC_Table::class,
 		'ptable'                      => 'tl_teamtournament_teams',
 		'switchToEdit'                => true,
 		'enableVersioning'            => true,
@@ -33,14 +36,14 @@ $GLOBALS['TL_DCA']['tl_teamtournament_players'] = array
 		)
 	),
 
-	// List
+	// Listenansicht
 	'list' => array
 	(
 		'sorting' => array
 		(
-			'mode'                    => 4,
+			'mode'                    => DataContainer::MODE_PARENT,
 			'fields'                  => array('surname ASC', 'prename ASC'),
-			'flag'                    => 12,
+			'flag'                    => DataContainer::SORT_DESC,
 			'headerFields'            => array('name'),
 			'panelLayout'             => 'filter;sort;search,limit',
 			'child_record_callback'   => array('tl_teamtournament_players', 'listPlayers'),
@@ -48,7 +51,10 @@ $GLOBALS['TL_DCA']['tl_teamtournament_players'] = array
 		),
 		'label' => array
 		(
-			'fields'                  => array('name',),
+			// Stand hier früher als array('name') mit dem Format '%s %s': Ein
+			// Feld «name» gibt es in dieser Tabelle gar nicht, und für zwei
+			// Platzhalter fehlte der zweite Wert
+			'fields'                  => array('surname', 'prename'),
 			'showColumns'             => true,
 			'format'                  => '%s %s',
 		),
@@ -68,57 +74,53 @@ $GLOBALS['TL_DCA']['tl_teamtournament_players'] = array
 			(
 				'label'               => &$GLOBALS['TL_LANG']['tl_teamtournament_players']['edit'],
 				'href'                => 'act=edit',
-				'icon'                => 'edit.gif'
+				'icon'                => 'edit.svg'
 			),
 			'copy' => array
 			(
 				'label'               => &$GLOBALS['TL_LANG']['tl_teamtournament_players']['copy'],
 				'href'                => 'act=paste&amp;mode=copy',
-				'icon'                => 'copy.gif'
+				'icon'                => 'copy.svg'
 			),
 			'cut' => array
 			(
 				'label'               => &$GLOBALS['TL_LANG']['tl_teamtournament_players']['cut'],
 				'href'                => 'act=paste&amp;mode=cut',
-				'icon'                => 'cut.gif'
+				'icon'                => 'cut.svg'
 			),
 			'delete' => array
 			(
 				'label'               => &$GLOBALS['TL_LANG']['tl_teamtournament_players']['delete'],
 				'href'                => 'act=delete',
-				'icon'                => 'delete.gif',
+				'icon'                => 'delete.svg',
+				// Der DcaLoader lädt die Sprachdateien noch nicht, deshalb der
+				// abgesicherte Lesezugriff
 				'attributes'          => 'onclick="if(!confirm(\'' . ($GLOBALS['TL_LANG']['MSC']['deleteConfirm'] ?? null) . '\'))return false;Backend.getScrollOffset()"'
 			),
+			// Umschalter ohne codefog/contao-haste, siehe tl_teamtournament
 			'toggle' => array
 			(
-				'label'                => &$GLOBALS['TL_LANG']['tl_teamtournament_players']['toggle'],
-				'attributes'           => 'onclick="Backend.getScrollOffset()"',
-				'haste_ajax_operation' => array
-				(
-					'field'            => 'published',
-					'options'          => array
-					(
-						array('value' => '', 'icon' => 'invisible.svg'),
-						array('value' => '1', 'icon' => 'visible.svg'),
-					),
-				),
+				'label'               => &$GLOBALS['TL_LANG']['tl_teamtournament_players']['toggle'],
+				'href'                => 'act=toggle&amp;field=published',
+				'icon'                => 'visible.svg',
+				'attributes'          => 'onclick="Backend.getScrollOffset()"'
 			),
 			'show' => array
 			(
 				'label'               => &$GLOBALS['TL_LANG']['tl_teamtournament_players']['show'],
 				'href'                => 'act=show',
-				'icon'                => 'show.gif'
+				'icon'                => 'show.svg'
 			)
 		)
 	),
 
-	// Palettes
+	// Paletten
 	'palettes' => array
 	(
 		'default'                     => '{name_legend},board,prename,surname,birthday,fide_title,fide_id,fide_elo,dwz,singleSRC,weblinks;{publish_legend},published'
 	),
 
-	// Fields
+	// Felder
 	'fields' => array
 	(
 		'id' => array
@@ -127,7 +129,10 @@ $GLOBALS['TL_DCA']['tl_teamtournament_players'] = array
 		),
 		'pid' => array
 		(
-			'foreignKey'              => 'tl_teamtournament_players.id',
+			// Verwies früher auf tl_teamtournament_players.id, also auf die
+			// eigene Tabelle. Richtig ist die Mannschaft: Spieler hängen an
+			// tl_teamtournament_teams, wie ptable oben auch sagt.
+			'foreignKey'              => 'tl_teamtournament_teams.name',
 			'sql'                     => "int(10) unsigned NOT NULL default '0'",
 			'relation'                => array('type'=>'belongsTo', 'load'=>'eager')
 		),
@@ -150,7 +155,7 @@ $GLOBALS['TL_DCA']['tl_teamtournament_players'] = array
 			'exclude'                 => true,
 			'search'                  => true,
 			'sorting'                 => true,
-			'flag'                    => 1,
+			'flag'                    => DataContainer::SORT_INITIAL_LETTER_ASC,
 			'inputType'               => 'text',
 			'eval'                    => array('mandatory'=>false, 'maxlength'=>32, 'tl_class'=>'w50'),
 			'sql'                     => "varchar(32) NOT NULL default ''"
@@ -161,7 +166,7 @@ $GLOBALS['TL_DCA']['tl_teamtournament_players'] = array
 			'exclude'                 => true,
 			'search'                  => true,
 			'sorting'                 => true,
-			'flag'                    => 1,
+			'flag'                    => DataContainer::SORT_INITIAL_LETTER_ASC,
 			'inputType'               => 'text',
 			'eval'                    => array('mandatory'=>false, 'maxlength'=>32, 'tl_class'=>'w50 clr'),
 			'sql'                     => "varchar(32) NOT NULL default ''"
@@ -172,7 +177,7 @@ $GLOBALS['TL_DCA']['tl_teamtournament_players'] = array
 			'exclude'                 => true,
 			'search'                  => false,
 			'sorting'                 => true,
-			'flag'                    => 11,
+			'flag'                    => DataContainer::SORT_ASC,
 			'inputType'               => 'text',
 			'eval'                    => array
 			(
@@ -182,11 +187,11 @@ $GLOBALS['TL_DCA']['tl_teamtournament_players'] = array
 			),
 			'load_callback'           => array
 			(
-				array('\Schachbulle\ContaoHelperBundle\Classes\Helper', 'getDate')
+				array(Helper::class, 'getDate')
 			),
 			'save_callback' => array
 			(
-				array('\Schachbulle\ContaoHelperBundle\Classes\Helper', 'putDate')
+				array(Helper::class, 'putDate')
 			),
 			'sql'                     => "int(8) unsigned NOT NULL default '0'"
 		),
@@ -207,7 +212,7 @@ $GLOBALS['TL_DCA']['tl_teamtournament_players'] = array
 			'reference'               => &$GLOBALS['TL_LANG']['tl_teamtournament_players']['fide_title_options'],
 			'exclude'                 => true,
 			'sorting'                 => true,
-			'flag'                    => 1,
+			'flag'                    => DataContainer::SORT_INITIAL_LETTER_ASC,
 			'filter'                  => true,
 			'search'                  => true,
 			'eval'                    => array
@@ -243,7 +248,7 @@ $GLOBALS['TL_DCA']['tl_teamtournament_players'] = array
 			'inputType'               => 'fileTree',
 			'eval'                    => array('filesOnly'=>true, 'fieldType'=>'radio', 'tl_class'=>'clr'),
 			'sql'                     => "binary(16) NULL",
-		),  
+		),
 		'weblinks' => array
 		(
 			'label'                   => &$GLOBALS['TL_LANG']['tl_teamtournament_players']['weblinks'],
@@ -259,9 +264,6 @@ $GLOBALS['TL_DCA']['tl_teamtournament_players'] = array
 					(
 						'label'                   => &$GLOBALS['TL_LANG']['tl_teamtournament_players']['weblinks_title'],
 						'exclude'                 => true,
-						'search'                  => false,
-						'sorting'                 => true,
-						'flag'                    => 12,
 						'inputType'               => 'text',
 						'eval'                    => array
 						(
@@ -287,61 +289,49 @@ $GLOBALS['TL_DCA']['tl_teamtournament_players'] = array
 			'label'                   => &$GLOBALS['TL_LANG']['tl_teamtournament_players']['published'],
 			'exclude'                 => true,
 			'filter'                  => true,
-			'flag'                    => 1,
-			'default'                 => true,
+			'flag'                    => DataContainer::SORT_INITIAL_LETTER_ASC,
+			'default'                 => 1,
 			'inputType'               => 'checkbox',
+			// Schaltet den Ajax-Umschalter in der Listenansicht frei
+			'toggle'                  => true,
 			'eval'                    => array
 			(
 				'doNotCopy'           => true
 			),
 			'sql'                     => "char(1) NOT NULL default ''"
-		),  
+		),
 	)
 );
 
-
 /**
- * Class tl_teamtournament_players
+ * Rückrufe des Datenbereichs tl_teamtournament_players.
  *
- * Provide miscellaneous methods that are used by the data configuration array.
- * @copyright  Leo Feyer 2005-2014
- * @author     Leo Feyer <https://contao.org>
- * @package    News
+ * Die Klasse erbt von Contao\Backend, weil Contao 5 keine globalen
+ * Klassenaliasse mehr registriert.
  */
 class tl_teamtournament_players extends Backend
 {
-
-	var $nummer = 0;
-	
 	/**
-	 * Import the back end user object
+	 * Erzeugt die Rückrufklasse.
+	 *
+	 * In Contao 4.13 ist Backend::__construct() als protected deklariert, erst
+	 * Contao 5 macht ihn öffentlich; ohne diese Überschreibung ließe sich die
+	 * Klasse dort von außerhalb der Contao-Klassenhierarchie nicht erzeugen.
 	 */
 	public function __construct()
 	{
 		parent::__construct();
-		$this->import('BackendUser', 'User');
 	}
 
 	/**
-	 * Return the link picker wizard
-	 * @param \DataContainer
-	 * @return string
+	 * Beschriftet einen Spieler in der Listenansicht.
+	 *
+	 * @param array<string, mixed> $arrRow Der Datensatz aus tl_teamtournament_players
+	 *
+	 * @return string Nachname und Vorname, durch Komma getrennt
 	 */
-	public function pagePicker(DataContainer $dc)
+	public function listPlayers($arrRow): string
 	{
-		return ' <a href="contao/page.php?do=' . Input::get('do') . '&amp;table=' . $dc->table . '&amp;field=' . $dc->field . '&amp;value=' . str_replace(array('{{link_url::', '}}'), '', $dc->value) . '" title="' . specialchars($GLOBALS['TL_LANG']['MSC']['pagepicker']) . '" onclick="Backend.getScrollOffset();Backend.openModalSelector({\'width\':765,\'title\':\'' . specialchars(str_replace("'", "\\'", $GLOBALS['TL_LANG']['MOD']['page'][0])) . '\',\'url\':this.href,\'id\':\'' . $dc->field . '\',\'tag\':\'ctrl_'. $dc->field . ((Input::get('act') == 'editAll') ? '_' . $dc->id : '') . '\',\'self\':this});return false">' . Image::getHtml('pickpage.gif', $GLOBALS['TL_LANG']['MSC']['pagepicker'], 'style="vertical-align:top;cursor:pointer"') . '</a>';
+		return trim($arrRow['surname'].', '.$arrRow['prename'], ', ');
 	}
-
-	/**
-	 * Datensätze auflisten
-	 * @param array
-	 * @return string
-	 */
-	public function listPlayers($arrRow)
-	{
-		$temp = $arrRow['surname']. ','.$arrRow['prename'];
-		return $temp;
-	}
-
-
 }

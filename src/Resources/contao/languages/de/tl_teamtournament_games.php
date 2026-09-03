@@ -29,6 +29,7 @@ $GLOBALS['TL_LANG']['tl_teamtournament_games']['published'] = array('Veröffentl
 $GLOBALS['TL_LANG']['tl_teamtournament_games']['new'] = array('Neue Paarung', 'Neue Paarung anlegen');
 $GLOBALS['TL_LANG']['tl_teamtournament_games']['edit'] = array('Paarung bearbeiten', 'Paarung %s bearbeiten');
 $GLOBALS['TL_LANG']['tl_teamtournament_games']['copy'] = array('Paarung kopieren', 'Paarung %s kopieren');
+$GLOBALS['TL_LANG']['tl_teamtournament_games']['cut'] = array('Paarung verschieben', 'Paarung %s verschieben');
 $GLOBALS['TL_LANG']['tl_teamtournament_games']['delete'] = array('Paarung löschen', 'Paarung %s löschen');
 $GLOBALS['TL_LANG']['tl_teamtournament_games']['toggle'] = array('Paarung aktivieren/deaktivieren', 'Paarung %s aktivieren/deaktivieren');
 $GLOBALS['TL_LANG']['tl_teamtournament_games']['show'] = array('Paarungsdetails anzeigen', 'Details der Paarung %s anzeigen');

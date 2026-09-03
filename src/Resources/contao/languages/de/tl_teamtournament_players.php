@@ -27,6 +27,7 @@ $GLOBALS['TL_LANG']['tl_teamtournament_players']['published'] = array('Aktiv', '
 $GLOBALS['TL_LANG']['tl_teamtournament_players']['new'] = array('Neuer Spieler', 'Neuen Spieler anlegen');
 $GLOBALS['TL_LANG']['tl_teamtournament_players']['edit'] = array('Spieler bearbeiten', 'Spieler %s bearbeiten');
 $GLOBALS['TL_LANG']['tl_teamtournament_players']['copy'] = array('Spieler kopieren', 'Spieler %s kopieren');
+$GLOBALS['TL_LANG']['tl_teamtournament_players']['cut'] = array('Spieler verschieben', 'Spieler %s verschieben');
 $GLOBALS['TL_LANG']['tl_teamtournament_players']['delete'] = array('Spieler löschen', 'Spieler %s löschen');
 $GLOBALS['TL_LANG']['tl_teamtournament_players']['toggle'] = array('Spieler aktivieren/deaktivieren', 'Spieler %s aktivieren/deaktivieren');
 $GLOBALS['TL_LANG']['tl_teamtournament_players']['show'] = array('Spielerdetails anzeigen', 'Detail des Spielers %s anzeigen');

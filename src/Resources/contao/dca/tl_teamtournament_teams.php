@@ -1,26 +1,32 @@
 <?php
 
-/**
- * Contao Open Source CMS
+declare(strict_types=1);
+
+/*
+ * Mannschaftsturniere für Contao Open Source CMS
  *
- * Copyright (c) 2005-2014 Leo Feyer
- *
- * @package News
- * @link    https://contao.org
- * @license http://www.gnu.org/licenses/lgpl-3.0.html LGPL
+ * @author    Frank Hoppe
+ * @license   LGPL-3.0-or-later
  */
 
+use Contao\Backend;
+use Contao\BackendUser;
+use Contao\DataContainer;
+use Contao\DC_Table;
+use Contao\Image;
+use Contao\StringUtil;
+use Contao\System;
+use Schachbulle\ContaoHelperBundle\Classes\Helper;
 
-/**
- * Table tl_teamtournament_teams
+/*
+ * Datenbereich tl_teamtournament_teams
  */
 $GLOBALS['TL_DCA']['tl_teamtournament_teams'] = array
 (
-
-	// Config
+	// Grundeinstellungen
 	'config' => array
 	(
-		'dataContainer'               => 'Table',
+		'dataContainer'               => DC_Table::class,
 		'ptable'                      => 'tl_teamtournament',
 		'ctable'                      => array('tl_teamtournament_players'),
 		'switchToEdit'                => true,
@@ -35,14 +41,14 @@ $GLOBALS['TL_DCA']['tl_teamtournament_teams'] = array
 		)
 	),
 
-	// List
+	// Listenansicht
 	'list' => array
 	(
 		'sorting' => array
 		(
-			'mode'                    => 4,
+			'mode'                    => DataContainer::MODE_PARENT,
 			'fields'                  => array('name ASC'),
-			'flag'                    => 12,
+			'flag'                    => DataContainer::SORT_DESC,
 			'headerFields'            => array('title'),
 			'panelLayout'             => 'filter;sort;search,limit',
 			'child_record_callback'   => array('tl_teamtournament_teams', 'listTeams'),
@@ -70,60 +76,56 @@ $GLOBALS['TL_DCA']['tl_teamtournament_teams'] = array
 			(
 				'label'               => &$GLOBALS['TL_LANG']['tl_teamtournament_teams']['edit'],
 				'href'                => 'table=tl_teamtournament_players',
-				'icon'                => 'edit.gif'
+				'icon'                => 'edit.svg'
 			),
 			'editheader' => array
 			(
 				'label'               => &$GLOBALS['TL_LANG']['tl_teamtournament_teams']['editheader'],
 				'href'                => 'act=edit',
-				'icon'                => 'header.gif',
+				'icon'                => 'header.svg',
 				'button_callback'     => array('tl_teamtournament_teams', 'editHeader')
 			),
 			'copy' => array
 			(
 				'label'               => &$GLOBALS['TL_LANG']['tl_teamtournament_teams']['copy'],
 				'href'                => 'act=copy',
-				'icon'                => 'copy.gif',
+				'icon'                => 'copy.svg',
 				'button_callback'     => array('tl_teamtournament_teams', 'copyArchive')
 			),
 			'delete' => array
 			(
 				'label'               => &$GLOBALS['TL_LANG']['tl_teamtournament_teams']['delete'],
 				'href'                => 'act=delete',
-				'icon'                => 'delete.gif',
+				'icon'                => 'delete.svg',
+				// Der DcaLoader lädt die Sprachdateien noch nicht, deshalb der
+				// abgesicherte Lesezugriff
 				'attributes'          => 'onclick="if(!confirm(\'' . ($GLOBALS['TL_LANG']['MSC']['deleteConfirm'] ?? null) . '\'))return false;Backend.getScrollOffset()"',
 				'button_callback'     => array('tl_teamtournament_teams', 'deleteArchive')
 			),
+			// Umschalter ohne codefog/contao-haste, siehe tl_teamtournament
 			'toggle' => array
 			(
-				'label'                => &$GLOBALS['TL_LANG']['tl_teamtournament_teams']['toggle'],
-				'attributes'           => 'onclick="Backend.getScrollOffset()"',
-				'haste_ajax_operation' => array
-				(
-					'field'            => 'published',
-					'options'          => array
-					(
-						array('value' => '', 'icon' => 'invisible.svg'),
-						array('value' => '1', 'icon' => 'visible.svg'),
-					),
-				),
+				'label'               => &$GLOBALS['TL_LANG']['tl_teamtournament_teams']['toggle'],
+				'href'                => 'act=toggle&amp;field=published',
+				'icon'                => 'visible.svg',
+				'attributes'          => 'onclick="Backend.getScrollOffset()"'
 			),
 			'show' => array
 			(
 				'label'               => &$GLOBALS['TL_LANG']['tl_teamtournament_teams']['show'],
 				'href'                => 'act=show',
-				'icon'                => 'show.gif'
+				'icon'                => 'show.svg'
 			)
 		)
 	),
 
-	// Palettes
+	// Paletten
 	'palettes' => array
 	(
 		'default'                     => '{name_legend},name,country,flag;{captain_legend:hide},prename,surname,birthday,fide_title,fide_id,fide_elo,dwz,singleSRC,weblinks;{publish_legend},published'
 	),
 
-	// Fields
+	// Felder
 	'fields' => array
 	(
 		'id' => array
@@ -146,11 +148,11 @@ $GLOBALS['TL_DCA']['tl_teamtournament_teams'] = array
 			'exclude'                 => true,
 			'search'                  => true,
 			'sorting'                 => true,
-			'flag'                    => 1,
+			'flag'                    => DataContainer::SORT_INITIAL_LETTER_ASC,
 			'inputType'               => 'text',
 			'eval'                    => array
 			(
-				'mandatory'           => true, 
+				'mandatory'           => true,
 				'maxlength'           => 255,
 				'tl_class'            => 'w50'
 			),
@@ -162,17 +164,17 @@ $GLOBALS['TL_DCA']['tl_teamtournament_teams'] = array
 			'exclude'                 => true,
 			'filter'                  => true,
 			'sorting'                 => true,
-			'flag'                    => 1,
+			'flag'                    => DataContainer::SORT_INITIAL_LETTER_ASC,
 			'inputType'               => 'select',
-			'options'                 => System::getCountries(),
+			'options_callback'        => array('tl_teamtournament_teams', 'getLaender'),
 			'eval'                    => array
 			(
-				'includeBlankOption'  => true, 
-				'chosen'              => true, 
+				'includeBlankOption'  => true,
+				'chosen'              => true,
 				'tl_class'            => 'w50'
 			),
 			'sql'                     => "varchar(2) NOT NULL default ''"
-		),  
+		),
 		'flag' => array
 		(
 			'label'                   => &$GLOBALS['TL_LANG']['tl_teamtournament_teams']['flag'],
@@ -180,14 +182,14 @@ $GLOBALS['TL_DCA']['tl_teamtournament_teams'] = array
 			'inputType'               => 'fileTree',
 			'eval'                    => array('filesOnly'=>true, 'fieldType'=>'radio', 'tl_class'=>'clr'),
 			'sql'                     => "binary(16) NULL",
-		),  
+		),
 		'surname' => array
 		(
 			'label'                   => &$GLOBALS['TL_LANG']['tl_teamtournament_teams']['surname'],
 			'exclude'                 => true,
 			'search'                  => true,
 			'sorting'                 => true,
-			'flag'                    => 1,
+			'flag'                    => DataContainer::SORT_INITIAL_LETTER_ASC,
 			'inputType'               => 'text',
 			'eval'                    => array('mandatory'=>false, 'maxlength'=>32, 'tl_class'=>'w50'),
 			'sql'                     => "varchar(32) NOT NULL default ''"
@@ -198,7 +200,7 @@ $GLOBALS['TL_DCA']['tl_teamtournament_teams'] = array
 			'exclude'                 => true,
 			'search'                  => true,
 			'sorting'                 => true,
-			'flag'                    => 1,
+			'flag'                    => DataContainer::SORT_INITIAL_LETTER_ASC,
 			'inputType'               => 'text',
 			'eval'                    => array('mandatory'=>false, 'maxlength'=>32, 'tl_class'=>'w50'),
 			'sql'                     => "varchar(32) NOT NULL default ''"
@@ -209,7 +211,7 @@ $GLOBALS['TL_DCA']['tl_teamtournament_teams'] = array
 			'exclude'                 => true,
 			'search'                  => false,
 			'sorting'                 => true,
-			'flag'                    => 11,
+			'flag'                    => DataContainer::SORT_ASC,
 			'inputType'               => 'text',
 			'eval'                    => array
 			(
@@ -219,11 +221,11 @@ $GLOBALS['TL_DCA']['tl_teamtournament_teams'] = array
 			),
 			'load_callback'           => array
 			(
-				array('\Schachbulle\ContaoHelperBundle\Classes\Helper', 'getDate')
+				array(Helper::class, 'getDate')
 			),
 			'save_callback' => array
 			(
-				array('\Schachbulle\ContaoHelperBundle\Classes\Helper', 'putDate')
+				array(Helper::class, 'putDate')
 			),
 			'sql'                     => "int(8) unsigned NOT NULL default '0'"
 		),
@@ -244,7 +246,7 @@ $GLOBALS['TL_DCA']['tl_teamtournament_teams'] = array
 			'reference'               => &$GLOBALS['TL_LANG']['tl_teamtournament_teams']['fide_title_options'],
 			'exclude'                 => true,
 			'sorting'                 => true,
-			'flag'                    => 1,
+			'flag'                    => DataContainer::SORT_INITIAL_LETTER_ASC,
 			'filter'                  => true,
 			'search'                  => true,
 			'eval'                    => array
@@ -280,7 +282,7 @@ $GLOBALS['TL_DCA']['tl_teamtournament_teams'] = array
 			'inputType'               => 'fileTree',
 			'eval'                    => array('filesOnly'=>true, 'fieldType'=>'radio', 'tl_class'=>'clr'),
 			'sql'                     => "binary(16) NULL",
-		),  
+		),
 		'weblinks' => array
 		(
 			'label'                   => &$GLOBALS['TL_LANG']['tl_teamtournament_teams']['weblinks'],
@@ -296,9 +298,6 @@ $GLOBALS['TL_DCA']['tl_teamtournament_teams'] = array
 					(
 						'label'                   => &$GLOBALS['TL_LANG']['tl_teamtournament_teams']['weblinks_title'],
 						'exclude'                 => true,
-						'search'                  => false,
-						'sorting'                 => true,
-						'flag'                    => 12,
 						'inputType'               => 'text',
 						'eval'                    => array
 						(
@@ -324,105 +323,148 @@ $GLOBALS['TL_DCA']['tl_teamtournament_teams'] = array
 			'label'                   => &$GLOBALS['TL_LANG']['tl_teamtournament_teams']['published'],
 			'exclude'                 => true,
 			'filter'                  => true,
-			'flag'                    => 1,
-			'default'                 => true,
+			'flag'                    => DataContainer::SORT_INITIAL_LETTER_ASC,
+			'default'                 => 1,
 			'inputType'               => 'checkbox',
+			// Schaltet den Ajax-Umschalter in der Listenansicht frei
+			'toggle'                  => true,
 			'eval'                    => array
 			(
 				'doNotCopy'           => true
 			),
 			'sql'                     => "char(1) NOT NULL default ''"
-		),  
+		),
 	)
 );
 
-
 /**
- * Class tl_teamtournament_teams
+ * Rückrufe des Datenbereichs tl_teamtournament_teams.
  *
- * Provide miscellaneous methods that are used by the data configuration array.
- * @copyright  Leo Feyer 2005-2014
- * @author     Leo Feyer <https://contao.org>
- * @package    News
+ * Die Klasse erbt von Contao\Backend, weil Contao 5 keine globalen
+ * Klassenaliasse mehr registriert.
  */
 class tl_teamtournament_teams extends Backend
 {
-
 	/**
-	 * Import the back end user object
+	 * Erzeugt die Rückrufklasse.
+	 *
+	 * In Contao 4.13 ist Backend::__construct() als protected deklariert, erst
+	 * Contao 5 macht ihn öffentlich; ohne diese Überschreibung ließe sich die
+	 * Klasse dort von außerhalb der Contao-Klassenhierarchie nicht erzeugen.
 	 */
 	public function __construct()
 	{
 		parent::__construct();
-		$this->import('BackendUser', 'User');
 	}
 
 	/**
-	 * Return the edit header button
-	 * @param array
-	 * @param string
-	 * @param string
-	 * @param string
-	 * @param string
-	 * @param string
-	 * @return string
+	 * Liefert die Länderliste für die Auswahl des Mannschaftslandes.
+	 *
+	 * Ersatz für das in Contao 5 entfallene System::getCountries(). Die
+	 * Schlüssel werden klein geschrieben, weil die vorhandenen Datensätze das
+	 * Länderkürzel so enthalten.
+	 *
+	 * @return array<string, string> Länderkürzel in Kleinschreibung => Name des
+	 *                               Landes in der Sprache des Backends
 	 */
-	public function editHeader($row, $href, $label, $title, $icon, $attributes)
+	public function getLaender(): array
 	{
-		return ($this->User->isAdmin || count(preg_grep('/^tl_teamtournament_teams::/', $this->User->alexf)) > 0) ? '<a href="'.$this->addToUrl($href.'&amp;id='.$row['id']).'" title="'.specialchars($title).'"'.$attributes.'>'.Image::getHtml($icon, $label).'</a> ' : Image::getHtml(preg_replace('/\.gif$/i', '_.gif', $icon)).' ';
-	}
+		$arrCountries = System::getContainer()->get('contao.intl.countries')->getCountries();
 
-
-	/**
-	 * Return the copy archive button
-	 * @param array
-	 * @param string
-	 * @param string
-	 * @param string
-	 * @param string
-	 * @param string
-	 * @return string
-	 */
-	public function copyArchive($row, $href, $label, $title, $icon, $attributes)
-	{
-		return ($this->User->isAdmin || $this->User->hasAccess('create', 'newp')) ? '<a href="'.$this->addToUrl($href.'&amp;id='.$row['id']).'" title="'.specialchars($title).'"'.$attributes.'>'.Image::getHtml($icon, $label).'</a> ' : Image::getHtml(preg_replace('/\.gif$/i', '_.gif', $icon)).' ';
-	}
-
-
-	/**
-	 * Return the delete archive button
-	 * @param array
-	 * @param string
-	 * @param string
-	 * @param string
-	 * @param string
-	 * @param string
-	 * @return string
-	 */
-	public function deleteArchive($row, $href, $label, $title, $icon, $attributes)
-	{
-		return ($this->User->isAdmin || $this->User->hasAccess('delete', 'newp')) ? '<a href="'.$this->addToUrl($href.'&amp;id='.$row['id']).'" title="'.specialchars($title).'"'.$attributes.'>'.Image::getHtml($icon, $label).'</a> ' : Image::getHtml(preg_replace('/\.gif$/i', '_.gif', $icon)).' ';
+		return array_combine(array_map('strtolower', array_keys($arrCountries)), $arrCountries);
 	}
 
 	/**
-	 * Return the link picker wizard
-	 * @param \DataContainer
-	 * @return string
+	 * Zeigt den Knopf „Mannschaft bearbeiten" nur bei ausreichenden Rechten.
+	 *
+	 * @param array<string, mixed> $row        Der Datensatz aus tl_teamtournament_teams
+	 * @param string               $href       Ziel der Operation
+	 * @param string               $label      Beschriftung aus der Sprachdatei
+	 * @param string               $title      Titel-Attribut des Verweises
+	 * @param string               $icon       Pfad des Symbols aus der DCA
+	 * @param string               $attributes Weitere Attribute des Verweises
+	 *
+	 * @return string Der Verweis als Markup, oder das ausgegraute Symbol
 	 */
-	public function pagePicker(DataContainer $dc)
+	public function editHeader($row, $href, $label, $title, $icon, $attributes): string
 	{
-		return ' <a href="contao/page.php?do=' . Input::get('do') . '&amp;table=' . $dc->table . '&amp;field=' . $dc->field . '&amp;value=' . str_replace(array('{{link_url::', '}}'), '', $dc->value) . '" title="' . specialchars($GLOBALS['TL_LANG']['MSC']['pagepicker']) . '" onclick="Backend.getScrollOffset();Backend.openModalSelector({\'width\':765,\'title\':\'' . specialchars(str_replace("'", "\\'", $GLOBALS['TL_LANG']['MOD']['page'][0])) . '\',\'url\':this.href,\'id\':\'' . $dc->field . '\',\'tag\':\'ctrl_'. $dc->field . ((Input::get('act') == 'editAll') ? '_' . $dc->id : '') . '\',\'self\':this});return false">' . Image::getHtml('pickpage.gif', $GLOBALS['TL_LANG']['MSC']['pagepicker'], 'style="vertical-align:top;cursor:pointer"') . '</a>';
-	} 
+		$objUser = BackendUser::getInstance();
+		$blnErlaubt = $objUser->isAdmin || \count(preg_grep('/^tl_teamtournament_teams::/', (array) $objUser->alexf)) > 0;
 
-	/**
-	 * Datensätze auflisten
-	 * @param array
-	 * @return string
-	 */
-	public function listTeams($arrRow)
-	{
-		$temp = $arrRow['name']. ' ('.$arrRow['country'].')';
-		return $temp;
+		return $this->generateButton($blnErlaubt, $row, $href, $label, $title, $icon, $attributes);
 	}
 
+	/**
+	 * Zeigt den Knopf „Mannschaft kopieren" nur bei ausreichenden Rechten.
+	 *
+	 * @param array<string, mixed> $row        Der Datensatz aus tl_teamtournament_teams
+	 * @param string               $href       Ziel der Operation
+	 * @param string               $label      Beschriftung aus der Sprachdatei
+	 * @param string               $title      Titel-Attribut des Verweises
+	 * @param string               $icon       Pfad des Symbols aus der DCA
+	 * @param string               $attributes Weitere Attribute des Verweises
+	 *
+	 * @return string Der Verweis als Markup, oder das ausgegraute Symbol
+	 */
+	public function copyArchive($row, $href, $label, $title, $icon, $attributes): string
+	{
+		$objUser = BackendUser::getInstance();
+
+		return $this->generateButton($objUser->isAdmin || $objUser->hasAccess('create', 'newp'), $row, $href, $label, $title, $icon, $attributes);
+	}
+
+	/**
+	 * Zeigt den Knopf „Mannschaft löschen" nur bei ausreichenden Rechten.
+	 *
+	 * @param array<string, mixed> $row        Der Datensatz aus tl_teamtournament_teams
+	 * @param string               $href       Ziel der Operation
+	 * @param string               $label      Beschriftung aus der Sprachdatei
+	 * @param string               $title      Titel-Attribut des Verweises
+	 * @param string               $icon       Pfad des Symbols aus der DCA
+	 * @param string               $attributes Weitere Attribute des Verweises
+	 *
+	 * @return string Der Verweis als Markup, oder das ausgegraute Symbol
+	 */
+	public function deleteArchive($row, $href, $label, $title, $icon, $attributes): string
+	{
+		$objUser = BackendUser::getInstance();
+
+		return $this->generateButton($objUser->isAdmin || $objUser->hasAccess('delete', 'newp'), $row, $href, $label, $title, $icon, $attributes);
+	}
+
+	/**
+	 * Baut das Markup einer rechteabhängigen Operation.
+	 *
+	 * @param bool                 $blnErlaubt Ergebnis der Rechteprüfung
+	 * @param array<string, mixed> $row        Der Datensatz aus tl_teamtournament_teams
+	 * @param string               $href       Ziel der Operation
+	 * @param string               $label      Beschriftung aus der Sprachdatei
+	 * @param string               $title      Titel-Attribut des Verweises
+	 * @param string               $icon       Pfad des Symbols aus der DCA
+	 * @param string               $attributes Weitere Attribute des Verweises
+	 *
+	 * @return string Der anklickbare Verweis, oder das ausgegraute Symbol ohne
+	 *                Verweis
+	 */
+	private function generateButton(bool $blnErlaubt, $row, $href, $label, $title, $icon, $attributes): string
+	{
+		if (!$blnErlaubt)
+		{
+			return Image::getHtml(preg_replace('/\.(gif|svg)$/i', '_.svg', $icon)).' ';
+		}
+
+		return '<a href="'.self::addToUrl($href.'&amp;id='.$row['id']).'" title="'.StringUtil::specialchars($title).'"'.$attributes.'>'.Image::getHtml($icon, $label).'</a> ';
+	}
+
+	/**
+	 * Beschriftet eine Mannschaft in der Listenansicht.
+	 *
+	 * @param array<string, mixed> $arrRow Der Datensatz aus tl_teamtournament_teams
+	 *
+	 * @return string Name der Mannschaft mit dem Länderkürzel in Klammern
+	 */
+	public function listTeams($arrRow): string
+	{
+		return $arrRow['name'].' ('.$arrRow['country'].')';
+	}
 }

@@ -1,192 +1,226 @@
 <?php
 
-/**
- * Contao Open Source CMS
+declare(strict_types=1);
+
+/*
+ * Mannschaftsturniere für Contao Open Source CMS
  *
- * Copyright (C) 2005-2013 Leo Feyer
- *
- * @package   chesstable
- * Version    1.0.0
  * @author    Frank Hoppe
- * @license   GNU/LGPL
- * @copyright Frank Hoppe 2013
+ * @license   LGPL-3.0-or-later
  */
 
 namespace Schachbulle\ContaoTeamtournamentBundle\ContentElements;
 
-class Rounds extends \ContentElement
-{
+use Contao\ContentElement;
+use Contao\Database;
+use Schachbulle\ContaoTeamtournamentBundle\Classes\Helfer;
 
+/**
+ * Inhaltselement „Rundenübersicht".
+ *
+ * Gibt alle Wettkämpfe einer Runde aus: je Wettkampf eine Kopfzeile mit den
+ * beiden Mannschaften und dem Mannschaftsergebnis, darunter die Einzelpartien
+ * an den Brettern.
+ */
+class Rounds extends ContentElement
+{
+	/**
+	 * Name des Frontend-Templates.
+	 *
+	 * @var string
+	 */
 	protected $strTemplate = 'ce_tt-round';
 
 	/**
-	 * Generate the module
+	 * Baut die Tabelle der Rundenübersicht zusammen.
+	 *
+	 * Mannschaften und Spieler werden vorab einmal eingelesen und in zwei
+	 * Feldern abgelegt, damit die Schleife über die Bretter ohne weitere
+	 * Datenbankabfragen auskommt.
 	 */
 	protected function compile()
 	{
+		$objTurnier = Database::getInstance()
+			->prepare("SELECT * FROM tl_teamtournament WHERE id=?")
+			->execute($this->teamtournament_turnier);
 
-		// Symlink für das externe Bundle components/flag-icon-css erstellen, wenn noch nicht vorhanden
-		if(!is_link(TL_ROOT.'/web/bundles/flag-icon-css')) symlink(TL_ROOT.'/vendor/components/flag-icon-css/', TL_ROOT.'/web/bundles/flag-icon-css'); // Ziel, Name
-
-		// Turnier laden
-		$objTurnier = \Database::getInstance()->prepare("SELECT * FROM tl_teamtournament WHERE id=?")
-		                                      ->execute($this->teamtournament_turnier);
-		// Mannschaften laden
-		$objMannschaften = \Database::getInstance()->prepare("SELECT * FROM tl_teamtournament_teams WHERE pid=?")
-		                                           ->execute($this->teamtournament_turnier);
-		while($objMannschaften->next())
+		if (!$objTurnier->numRows)
 		{
-			// Logo/Bild der Mannschaft generieren
-			$bild = '';
-			if($objMannschaften->flag)
-			{
-				$objFile = \FilesModel::findByUuid($objMannschaften->flag);
-				$imageSize = unserialize($objTurnier->imageSize_flags);
-				$objBild = new \stdClass();
-				\Controller::addImageToTemplate($objBild, array('singleSRC' => $objFile->path, 'size' => $imageSize), \Config::get('maxImageWidth'), null, $objFile);
-				$bild = '<figure class="image_container">';
-				$bild .= '<a href="'.$objBild->singleSRC.'" data-lightbox="tt'.$objSpieler->id.'"><img src="'.$objBild->src.'" alt="'.$objBild->alt.'" title="'.$objBild->imageTitle.'"></a>';
-				if($objBild->caption)
-				{
-					$bild .= '<figcaption class="caption">'.$objBild->caption.'</figcaption>';
-				}
-				$bild .= '</figure>';
-			}
-			$mannschaft[$objMannschaften->id] = array
-			(
-				'name'    => $objMannschaften->name,
-				'country' => $objMannschaften->country,
-				'flagge'  => $bild
-			);
+			$this->Template->content = '';
+
+			return;
 		}
-		// Spieler laden
-		$objSpieler = \Database::getInstance()->prepare("SELECT * FROM tl_teamtournament_players")
-		                                      ->execute();
-		while($objSpieler->next())
-		{
-			// Foto erstellen
-			if($objSpieler->singleSRC)
-			{
-				$bild_id = $objSpieler->singleSRC;
-			}
-			elseif($objTurnier->gender == 'm' && isset($GLOBALS['TL_CONFIG']['teamtournament_defaultImageMen']))
-			{
-				$bild_id = $GLOBALS['TL_CONFIG']['teamtournament_defaultImageMen'];
-			}
-			elseif($objTurnier->gender == 'w' && isset($GLOBALS['TL_CONFIG']['teamtournament_defaultImageWomen']))
-			{
-				$bild_id = $GLOBALS['TL_CONFIG']['teamtournament_defaultImageWomen'];
-			}
 
-			// Foto generieren
-			$bild = '';
-			if($bild_id)
-			{
-				$objFile = \FilesModel::findByUuid($bild_id);
-				if($objFile)
-				{
-					$imageSize = unserialize($objTurnier->imageSize_results);
-					$objBild = new \stdClass();
-					\Controller::addImageToTemplate($objBild, array('singleSRC' => $objFile->path, 'size' => $imageSize), \Config::get('maxImageWidth'), null, $objFile);
-					$bild = '<figure class="image_container">';
-					$bild .= '<a href="'.$objBild->singleSRC.'" data-lightbox="tt'.$objSpieler->id.'"><img src="'.$objBild->src.'" alt="'.$objBild->alt.'" title="'.$objBild->imageTitle.'"></a>';
-					if($objBild->caption)
-					{
-						$bild .= '<figcaption class="caption">'.$objBild->caption.'</figcaption>';
-					}
-					$bild .= '</figure>';
-				}
-			}
+		$mannschaft = $this->getMannschaften((int) $this->teamtournament_turnier, $objTurnier->imageSize_flags);
+		$spieler = $this->getSpieler((int) $this->teamtournament_turnier, $objTurnier->gender, $objTurnier->imageSize_results);
 
-			// Spielerdaten sichern
-			$spieler[$objSpieler->id] = array
-			(
-				'name'       => $objSpieler->prename.' '.$objSpieler->surname,
-				'fide_title' => $objSpieler->fide_title,
-				'fide_elo'   => $objSpieler->fide_elo,
-				'bild'       => $bild,
-			);
-		}
-		// Wettkämpfe der Runde laden
-		// $this->teamtournament_turnier = ID des Turniers
-		// $this->teamtournament_runde = Nummer der Runde
-		$objWettkaempfe = \Database::getInstance()->prepare("SELECT * FROM tl_teamtournament_matches WHERE pid=? AND round=? ORDER BY round ASC")
-		                                          ->execute($this->teamtournament_turnier, $this->teamtournament_runde);
+		$objWettkaempfe = Database::getInstance()
+			->prepare("SELECT * FROM tl_teamtournament_matches WHERE pid=? AND round=? ORDER BY board ASC, id ASC")
+			->execute($this->teamtournament_turnier, $this->teamtournament_runde);
 
-		$content ='';
-		$content .= '<table>';
+		$brett = $objTurnier->language == 'en' ? 'Bo.' : 'Br.';
+
+		$content = '<table>';
 		$tisch = 0;
-		// Wettkämpfe durchgehen
-		while($objWettkaempfe->next())
+
+		while ($objWettkaempfe->next())
 		{
-			$tisch++;
-			if($tisch > 1) {
-				// Leerzeile einbauen
-				$content .= '<tr class="empty">';
-				$content .= '<td class="empty" colspan="6">&nbsp;</td>';
-				$content .= '</tr>';
+			++$tisch;
+
+			// Zwischen zwei Wettkämpfen eine Leerzeile
+			if ($tisch > 1)
+			{
+				$content .= '<tr class="empty"><td class="empty" colspan="6">&nbsp;</td></tr>';
 			}
-			// Ergebnis bauen
+
 			$ergebnis = self::getErgebnis($objWettkaempfe->resultTeam1, $objWettkaempfe->resultTeam2);
-			// Kopfzeile mit den Mannschaften
+
 			$content .= '<tr class="head">';
-			if($objTurnier->language == 'de')
-			{
-				$content .= '<th class="board">Br.</th>';
-				$content .= '<th class="team">'.$mannschaft[$objWettkaempfe->team1]['flagge'].' '.$mannschaft[$objWettkaempfe->team1]['name'].'</th>';
-				$content .= '<th class="rating">Elo</th>';
-				$content .= '<th class="result">'.$ergebnis.'</th>';
-				$content .= '<th class="team">'.$mannschaft[$objWettkaempfe->team2]['flagge'].' '.$mannschaft[$objWettkaempfe->team2]['name'].'</th>';
-				$content .= '<th class="rating">Elo</th>';
-			}
-			elseif($objTurnier->language == 'en')
-			{
-				$content .= '<th class="board">Bo.</th>';
-				$content .= '<th class="team">'.$mannschaft[$objWettkaempfe->team1]['flagge'].' '.$mannschaft[$objWettkaempfe->team1]['name'].'</th>';
-				$content .= '<th class="rating">Elo</th>';
-				$content .= '<th class="result">'.$ergebnis.'</th>';
-				$content .= '<th class="team">'.$mannschaft[$objWettkaempfe->team2]['flagge'].' '.$mannschaft[$objWettkaempfe->team2]['name'].'</th>';
-				$content .= '<th class="rating">Elo</th>';
-			}
+			$content .= '<th class="board">'.$brett.'</th>';
+			$content .= '<th class="team">'.trim(($mannschaft[$objWettkaempfe->team1]['flagge'] ?? '').' '.($mannschaft[$objWettkaempfe->team1]['name'] ?? '')).'</th>';
+			$content .= '<th class="rating">Elo</th>';
+			$content .= '<th class="result">'.$ergebnis.'</th>';
+			$content .= '<th class="team">'.trim(($mannschaft[$objWettkaempfe->team2]['flagge'] ?? '').' '.($mannschaft[$objWettkaempfe->team2]['name'] ?? '')).'</th>';
+			$content .= '<th class="rating">Elo</th>';
 			$content .= '</tr>';
-			
-			// Bretter des Wettkampfes laden
-			$objBretter = \Database::getInstance()->prepare("SELECT * FROM tl_teamtournament_games WHERE pid=? ORDER BY board ASC")
-			                                      ->execute($objWettkaempfe->id);
-			while($objBretter->next())
+
+			$objBretter = Database::getInstance()
+				->prepare("SELECT * FROM tl_teamtournament_games WHERE pid=? ORDER BY board ASC")
+				->execute($objWettkaempfe->id);
+
+			while ($objBretter->next())
 			{
+				// Die Farbangabe gilt für den Spieler der ersten Mannschaft;
+				// der Gegner hat immer die andere Farbe
+				$weiss = $objBretter->colors == 'w';
+
 				$content .= '<tr>';
 				$content .= '<td class="board">'.$objBretter->board.'</td>';
-				$content .= '<td class="player'.($objBretter->colors == 'w' ? ' white' : ' black').'">'.trim($spieler[$objBretter->player1]['bild'].' '.$spieler[$objBretter->player1]['fide_title'].' '.$spieler[$objBretter->player1]['name']).'</td>';
-				$content .= '<td class="rating">'.$spieler[$objBretter->player1]['fide_elo'].'</td>';
+				$content .= '<td class="player'.($weiss ? ' white' : ' black').'">'.$this->getSpielerZelle($spieler, $objBretter->player1).'</td>';
+				$content .= '<td class="rating">'.($spieler[$objBretter->player1]['fide_elo'] ?? '').'</td>';
 				$content .= '<td class="result">'.$objBretter->result.'</td>';
-				$content .= '<td class="player'.($objBretter->colors == 'w' ? ' black' : ' white').'">'.trim($spieler[$objBretter->player2]['bild'].' '.$spieler[$objBretter->player2]['fide_title'].' '.$spieler[$objBretter->player2]['name']).'</td>';
-				$content .= '<td class="rating">'.$spieler[$objBretter->player2]['fide_elo'].'</td>';
+				$content .= '<td class="player'.($weiss ? ' black' : ' white').'">'.$this->getSpielerZelle($spieler, $objBretter->player2).'</td>';
+				$content .= '<td class="rating">'.($spieler[$objBretter->player2]['fide_elo'] ?? '').'</td>';
 				$content .= '</tr>';
 			}
 		}
+
 		$content .= '</table>';
-		
 
-		// Template ausgeben
 		$this->Template->content = $content;
-		return;
-
 	}
 
 	/**
-	 * Formatiertes Ergebnis zurückgeben
+	 * Liest alle Mannschaften eines Turniers ein.
+	 *
+	 * @param int   $intTurnier Kennung des Turniers
+	 * @param mixed $varGroesse Bildgröße für die Mannschaftslogos, wie am Turnier
+	 *                          hinterlegt
+	 *
+	 * @return array<int, array<string, string>> Mannschaftskennung => Name, Land
+	 *                                           und fertiges Logo-Markup
 	 */
-	public function getErgebnis($erg1, $erg2)
+	private function getMannschaften(int $intTurnier, $varGroesse): array
 	{
-		if($erg1 || $erg2)
+		$arrMannschaften = array();
+
+		$objMannschaften = Database::getInstance()
+			->prepare("SELECT * FROM tl_teamtournament_teams WHERE pid=?")
+			->execute($intTurnier);
+
+		while ($objMannschaften->next())
 		{
-			$ergebnis = str_replace('.', ',', sprintf('%0.1f',$erg1).' : '.sprintf('%0.1f',$erg2));
-			return $ergebnis;
+			$arrMannschaften[$objMannschaften->id] = array
+			(
+				'name'    => $objMannschaften->name,
+				'country' => $objMannschaften->country,
+				'flagge'  => Helfer::bild($objMannschaften->flag, $varGroesse, 'tt'.$objMannschaften->id),
+			);
 		}
-		else
+
+		return $arrMannschaften;
+	}
+
+	/**
+	 * Liest alle Spieler eines Turniers ein.
+	 *
+	 * Die Abfrage lief früher ohne Einschränkung über die gesamte
+	 * Spielertabelle — bei mehreren Turnieren in einer Installation wurden also
+	 * auch alle fremden Spieler samt Bildern aufbereitet. Der Verbund über die
+	 * Mannschaftstabelle beschränkt das auf das gewählte Turnier.
+	 *
+	 * @param int         $intTurnier    Kennung des Turniers
+	 * @param string|null $strGeschlecht 'm' oder 'w'; entscheidet, welches
+	 *                                   Standardbild einspringt
+	 * @param mixed       $varGroesse    Bildgröße für die Spielerfotos
+	 *
+	 * @return array<int, array<string, string>> Spielerkennung => Name, Titel,
+	 *                                           Elo-Zahl und Foto-Markup
+	 */
+	private function getSpieler(int $intTurnier, $strGeschlecht, $varGroesse): array
+	{
+		$arrSpieler = array();
+		$strStandardbild = Helfer::standardbild($strGeschlecht);
+
+		$objSpieler = Database::getInstance()
+			->prepare("SELECT p.* FROM tl_teamtournament_players p LEFT JOIN tl_teamtournament_teams t ON t.id=p.pid WHERE t.pid=?")
+			->execute($intTurnier);
+
+		while ($objSpieler->next())
+		{
+			$bild_id = $objSpieler->singleSRC ?: $strStandardbild;
+
+			$arrSpieler[$objSpieler->id] = array
+			(
+				'name'       => trim($objSpieler->prename.' '.$objSpieler->surname),
+				'fide_title' => $objSpieler->fide_title,
+				'fide_elo'   => $objSpieler->fide_elo,
+				'bild'       => Helfer::bild($bild_id, $varGroesse, 'tt'.$objSpieler->id),
+			);
+		}
+
+		return $arrSpieler;
+	}
+
+	/**
+	 * Setzt die Zelle eines Spielers aus Foto, Titel und Namen zusammen.
+	 *
+	 * @param array<int, array<string, string>> $arrSpieler Die eingelesenen Spieler
+	 * @param mixed                             $varId      Kennung des Spielers am Brett;
+	 *                                                      0, wenn das Brett unbesetzt ist
+	 *
+	 * @return string Der Inhalt der Zelle, oder eine leere Zeichenkette, wenn zu
+	 *                der Kennung kein Spieler vorliegt
+	 */
+	private function getSpielerZelle(array $arrSpieler, $varId): string
+	{
+		if (!isset($arrSpieler[$varId]))
+		{
+			return '';
+		}
+
+		return trim($arrSpieler[$varId]['bild'].' '.$arrSpieler[$varId]['fide_title'].' '.$arrSpieler[$varId]['name']);
+	}
+
+	/**
+	 * Formatiert das Mannschaftsergebnis eines Wettkampfes.
+	 *
+	 * Die Punkte stehen in der Datenbank mit Punkt als Dezimaltrennzeichen; in
+	 * der Ausgabe steht das hierzulande übliche Komma.
+	 *
+	 * @param mixed $erg1 Brettpunkte der ersten Mannschaft
+	 * @param mixed $erg2 Brettpunkte der zweiten Mannschaft
+	 *
+	 * @return string Das Ergebnis als '4,5 : 3,5', oder '-', solange der
+	 *                Wettkampf noch nicht gewertet ist
+	 */
+	public static function getErgebnis($erg1, $erg2): string
+	{
+		if (!$erg1 && !$erg2)
 		{
 			return '-';
 		}
+
+		return str_replace('.', ',', sprintf('%0.1f', (float) $erg1).' : '.sprintf('%0.1f', (float) $erg2));
 	}
 }

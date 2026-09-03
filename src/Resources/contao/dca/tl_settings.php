@@ -1,23 +1,24 @@
 <?php
 
-/**
- * Contao Open Source CMS
+declare(strict_types=1);
+
+/*
+ * Mannschaftsturniere für Contao Open Source CMS
  *
- * Copyright (C) 2005-2013 Leo Feyer
- *
- * @package   fen
  * @author    Frank Hoppe
- * @license   GNU/LGPL
- * @copyright Frank Hoppe 2013
+ * @license   LGPL-3.0-or-later
  */
 
-/**
- * palettes
+use Contao\StringUtil;
+use Contao\Validator;
+
+/*
+ * Palette
  */
 $GLOBALS['TL_DCA']['tl_settings']['palettes']['default'] .= ';{teamtournament_legend:hide},teamtournament_defaultImageMen,teamtournament_defaultImageWomen,teamtournament_css';
 
-/**
- * fields
+/*
+ * Felder
  */
 
 $GLOBALS['TL_DCA']['tl_settings']['fields']['teamtournament_defaultImageMen'] = array
@@ -29,6 +30,20 @@ $GLOBALS['TL_DCA']['tl_settings']['fields']['teamtournament_defaultImageMen'] = 
 		'filesOnly'           => true,
 		'fieldType'           => 'radio',
 		'tl_class'            => 'w50 clr'
+	),
+	// Der Dateibaum liefert die UUID als 16 Byte Binärwert. Die Einstellungen
+	// landen aber in system/config/localconfig.php, also in einer PHP-Datei,
+	// die den Binärwert nicht unbeschadet übersteht: Nullbytes und Backslashes
+	// gehen dabei verloren, und FilesModel::findByUuid() findet die Datei
+	// später nicht mehr. Deshalb wird hier in die lesbare Schreibweise
+	// umgewandelt, die findByUuid() ebenso versteht. Gilt für beide
+	// Standardbild-Felder dieser Datei.
+	'save_callback' => array
+	(
+		static function ($varValue)
+		{
+			return Validator::isBinaryUuid($varValue) ? StringUtil::binToUuid($varValue) : $varValue;
+		}
 	)
 );
 
@@ -41,6 +56,14 @@ $GLOBALS['TL_DCA']['tl_settings']['fields']['teamtournament_defaultImageWomen'] 
 		'filesOnly'           => true,
 		'fieldType'           => 'radio',
 		'tl_class'            => 'w50'
+	),
+	// Umwandlung der binären UUID, siehe Hinweis beim ersten Standardbild-Feld
+	'save_callback' => array
+	(
+		static function ($varValue)
+		{
+			return Validator::isBinaryUuid($varValue) ? StringUtil::binToUuid($varValue) : $varValue;
+		}
 	)
 );
 

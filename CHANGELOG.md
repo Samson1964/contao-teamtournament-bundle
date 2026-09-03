@@ -1,5 +1,110 @@
 # Mannschaftsturniere-Bundle Changelog
 
+## Version 0.3.0 (2026-09-03)
+
+Diese Fassung läuft unter **Contao 4.13 und Contao 5** und unter **PHP bis 8.4**. Sie ist
+gegen die Quellen von Contao 4.13.58 und Contao 5.7.7 mit PHP 8.4.24 geprüft; der dafür
+gebaute Prüfstand liegt als `tools/pruefstand.php` bei.
+
+**Wichtig beim Aktualisieren:** Zwei Abhängigkeiten sind entfallen
+(`codefog/contao-haste`, `components/flag-icon-css`), eine ist dazugekommen
+(`schachbulle/contao-helper-bundle`). Wer das Bundle über den Contao Manager aktualisiert,
+merkt davon nichts; wer es von Hand einbindet, muss `composer update` laufen lassen.
+
+* Add: Unterstützung für Contao 5 und PHP 8.4. Bisher verlangte die `composer.json`
+  `contao/core-bundle: ^4` und `php: ^5.6`.
+* Fix: Die Inhaltselemente erbten von `\ContentElement`, die DCA-Rückrufklassen von
+  `Backend`, und im Code standen `\Database`, `\FilesModel`, `\Controller`, `\Config` und
+  `\Input` ohne Namensraum. Contao 5 registriert keine globalen Klassenaliasse mehr — jede
+  dieser Stellen hätte dort mit einem Fatal error abgebrochen.
+* Fix: `TL_MODE` in der `config.php` gibt es in Contao 5 nicht mehr. Die Frage, ob gerade
+  eine Frontend-Anfrage läuft, beantwortet jetzt `contao.routing.scope_matcher`. Der
+  Schalter für das mitgelieferte CSS wird über `Config::get()` gelesen, nicht mehr direkt
+  aus `$GLOBALS['TL_CONFIG']`.
+* Fix: `Controller::addImageToTemplate()` ist in Contao 5 entfallen. Alle Bilder laufen
+  jetzt über `contao.image.studio`, den es in beiden Fassungen gibt. Nebeneffekt: Ein
+  gelöschtes Bild führt nicht mehr zu „Attempt to read property path on null", sondern
+  einfach zu einer leeren Zelle.
+* Fix: `System::getCountries()` ist in Contao 5 entfallen. Die Länderliste kommt jetzt aus
+  `contao.intl.countries`. Die Schlüssel werden dabei klein geschrieben — der Dienst gibt
+  sie groß zurück, gespeichert sind sie klein, sonst fände die Auswahlliste den
+  hinterlegten Wert nicht wieder.
+* Fix: `Controller::generateImage()` und `specialchars()` sind in Contao 5 entfallen;
+  ersetzt durch `Image::getHtml()` und `StringUtil::specialchars()`.
+* Fix: `$this->import('BackendUser', 'User')` in den fünf Rückrufklassen bricht unter
+  Contao 5 ab, weil `System::import()` den unqualifizierten Klassennamen nicht auflöst. Die
+  Rückrufe holen den Benutzer jetzt über `BackendUser::getInstance()`. Der Konstruktor
+  selbst bleibt: Unter Contao 4.13 ist `Backend::__construct()` protected, ohne eigenen
+  öffentlichen Konstruktor ließen sich die Klassen dort nicht von außen erzeugen.
+* Fix: Der Kurzname `'Table'` als `dataContainer` ist in Contao 5 weg; überall steht jetzt
+  `DC_Table::class`.
+* Fix: Im Inhaltselement „Mannschaftsführer" verwies die Lightbox-Kennung auf
+  `$objSpieler->id` — eine Variable, die es in dieser Klasse gar nicht gibt. In der
+  Rundenübersicht stand dieselbe undefinierte Variable in der Schleife über die
+  Mannschaften. Unter PHP 8 sind das Warnungen, in der Ausgabe fehlte die Gruppierung.
+* Fix: In der Rundenübersicht wurde die Bildkennung `$bild_id` innerhalb der Spielerschleife
+  nicht zurückgesetzt. Ein Spieler ohne eigenes Foto und ohne passendes Standardbild bekam
+  deshalb das Bild seines Vorgängers.
+* Fix: `pid` in `tl_teamtournament_players` verwies als `foreignKey` auf die eigene Tabelle
+  statt auf `tl_teamtournament_teams`.
+* Fix: Die Auswahllisten der Spieler in einer Paarung lasen `$dc->activeRecord->pid`. Bei
+  einer neu angelegten Partie gibt es noch keinen Datensatz — dort brach die Maske ab; ab
+  Contao 5 gilt der Zugriff außerdem als veraltet. Ermittelt wird der Wettkampf jetzt über
+  den gespeicherten Datensatz beziehungsweise über den Parameter `pid` der Adresse.
+* Fix: Die Mannschaftsliste eines Wettkampfes las die Turnierkennung aus `Input::get('id')`.
+  Das stimmt nur in der Übersicht; beim Bearbeiten eines Wettkampfes steht dort dessen
+  eigene Kennung, und die Liste blieb leer oder zeigte fremde Mannschaften.
+* Fix: Der Wizard „Seite auswählen" am Feld Homepage zeigte auf `contao/page.php`, eine
+  Adresse aus Contao 3. Ersetzt durch `'dcaPicker' => true`, das beide Fassungen kennen.
+* Fix: In `tl_teamtournament_matches.php` war ein Kommentar in ISO-8859-1 kodiert; die Datei
+  war damit als einzige im Bundle kein gültiges UTF-8.
+* Fix: Fehlende Beschriftungen ergänzt: `editheader` in Turnier und Mannschaft, `cut` in
+  Spieler, Wettkampf und Paarung, `tt-captain_legend` beim Inhaltselement
+  „Mannschaftsführer".
+* Change: Der Umschalter „veröffentlicht" kommt ohne `codefog/contao-haste` aus. Contao 4.13
+  wie Contao 5 rendern `act=toggle&field=published` zusammen mit `'toggle' => true` am Feld
+  selbsttätig als Ajax-Umschalter. Die Abhängigkeit ist damit entfallen.
+* Change: `components/flag-icon-css` ist entfallen. Die drei Inhaltselemente legten dafür
+  bei jedem Aufruf eine Verknüpfung unter `web/bundles/` an — ein Verzeichnis, das es seit
+  Contao 5 nicht mehr gibt. Benutzt wurde die Bibliothek nirgends.
+* Change: `schachbulle/contao-helper-bundle` steht jetzt in der `composer.json`. Die
+  Datumsfelder der Spieler und Kapitäne haben es schon immer benutzt, ohne dass es als
+  Abhängigkeit geführt war.
+* Change: Die Rundenübersicht liest nur noch die Spieler des gewählten Turniers ein. Bisher
+  wurde die gesamte Spielertabelle geladen und für jeden Spieler ein Bild erzeugt, auch für
+  die fremder Turniere.
+* Change: Die Wettkämpfe einer Runde erscheinen in der Frontend-Ausgabe wie im Backend nach
+  Tischnummer sortiert. Bisher gab es dafür keine Sortierung, die Reihenfolge hing von der
+  Datenbank ab.
+* Change: Die gemeinsamen Teile der drei Inhaltselemente — Bilderzeugung, Standardbild und
+  Altersberechnung — liegen jetzt in `Classes\Helfer` statt dreimal als Kopie. Für die
+  Altersberechnung gibt es Unit-Tests unter `tests/`.
+* Change: Jede PHP-Datei hat `declare(strict_types=1)` und einen deutschen Kommentarblock je
+  Methode.
+
+## Version 0.2.4 (2026-08-03)
+
+**Wichtig beim Aktualisieren:** Die beiden Standardbilder in den Einstellungen (männlich und
+weiblich) müssen einmal neu ausgewählt und gespeichert werden. Die bisher gespeicherten
+Werte sind beschädigt und werden durch das Update nicht repariert.
+
+* Fix: Die beiden Standardbilder (Einstellungen, Bereich Mannschaftsturniere) blieben in
+  Aufstellung, Mannschaftsführer und Rundenübersicht wirkungslos. Der Dateibaum liefert die
+  Kennung der Datei als 16 Byte langen Binärwert; die Einstellungen landen aber in
+  `system/config/localconfig.php`, also in einer PHP-Datei mit einfach gequoteten
+  Zeichenketten. Nullbytes und Backslashes überleben das nicht — aus 16 Byte wurden beim
+  Zurücklesen 19, und `FilesModel::findByUuid()` fand die Datei nie. Ein `save_callback`
+  legt die Kennung jetzt in der lesbaren Schreibweise ab, die dieselbe Methode ebenso
+  versteht. Der Fehler fiel nicht auf, weil im Backend weiterhin ein Bild ausgewählt aussah.
+
+## Version 0.2.3 (2026-08-02)
+
+* Change: Die drei Auswahllisten der Bildgrößen im Mannschaftsturnier holen den Dienst
+  jetzt unter seinem aktuellen Namen `contao.image.sizes`. Der bisher benutzte Name
+  `contao.image.image_sizes` ist unter Contao 4.13 nur ein veralteter Alias auf denselben
+  Dienst und in Contao 5 entfernt — dort bräche das Bearbeiten eines Turniers mit „You have
+  requested a non-existent service“ ab.
+
 ## Version 0.2.2 (2026-07-29)
 
 * Fix: Warning: Undefined array key "deleteConfirm" bei contao:migrate -> Lesezugriffe auf $GLOBALS['TL_LANG'] in den DCA-Dateien mit `?? null` bzw. `?? array()` abgesichert, da der DcaLoader die Sprachdateien noch nicht geladen hat
