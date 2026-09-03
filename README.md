@@ -35,6 +35,36 @@ Datumsangaben dürfen unvollständig sein: `TT.MM.JJJJ`, `MM.JJJJ` oder nur `JJJ
 Spielern und Kapitänen ist das häufig nötig, weil von älteren Spielern oft nur das
 Geburtsjahr bekannt ist.
 
+## Aufstellung und Ergebnisse erfassen
+
+In der Liste der Wettkämpfe führt ein eigenes Symbol in die Maske **Aufstellung und
+Ergebnisse**. Sie erledigt beides auf einer Seite:
+
+1. **Aufstellung** — die Spieler beider Mannschaften stehen nebeneinander, angehakt wird,
+   wer mitspielt. Aus den Haken entstehen beim Speichern die Bretter: der erste angehakte
+   Spieler der einen Mannschaft gegen den ersten der anderen, in der Reihenfolge der
+   Brettnummern, die an den Spielern hinterlegt sind. Die Farbe wechselt von Brett zu
+   Brett; an Brett 1 hat die erste Mannschaft Weiß.
+2. **Ergebnisse** — je Brett die Namen links und rechts, dazwischen die Auswahl. Wer die
+   Aufstellung nachträglich ändert, behält die Ergebnisse aller Bretter, deren Paarung
+   gleich bleibt.
+
+Die Bretter lassen sich daneben weiterhin einzeln bearbeiten, etwa um eine PGN zu
+hinterlegen.
+
+## Wertung
+
+Am Turnier steht der Haken **Mannschaftspunkte aus den Brettpunkten errechnen**. Ist er
+gesetzt, ergibt sich das Ergebnis eines Wettkampfs aus den Einzelpartien — Sieg ein Punkt,
+Remis ein halber, kampflos gewonnen (`+:-`) ebenfalls ein Punkt. Die beiden Punktefelder
+am Wettkampf sind dann gesperrt.
+
+Ein einzelner Wettkampf lässt sich mit **Ergebnis überschreiben** davon ausnehmen. Das ist
+der Weg für Entscheidungen, die sich aus den Brettern nicht ergeben.
+
+Ist der Haken am Turnier nicht gesetzt, werden die Punkte wie bisher von Hand eingetragen;
+Komma und Punkt sind dabei gleichermaßen erlaubt (`4,5` wie `4.5`), ebenso `3½`.
+
 ## Inhaltselemente
 
 Drei Inhaltselemente in der Gruppe *Schach*:

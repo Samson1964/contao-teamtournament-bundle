@@ -129,7 +129,7 @@ $GLOBALS['TL_DCA']['tl_teamtournament'] = array
 	// Paletten
 	'palettes' => array
 	(
-		'default'                     => '{title_legend},title,gender;{place_legend},place,country;{date_legend},fromDate,toDate;{language_legend},language;{info_legend:hide},info,source;{options_legend:hide},singleSRC,url;{imageSize_legend:hide},imageSize_flags,imageSize_lineup,imageSize_results;{publish_legend},complete,published'
+		'default'                     => '{title_legend},title,gender;{place_legend},place,country;{date_legend},fromDate,toDate;{language_legend},language;{results_legend},calculateResults;{info_legend:hide},info,source;{options_legend:hide},singleSRC,url;{imageSize_legend:hide},imageSize_flags,imageSize_lineup,imageSize_results;{publish_legend},complete,published'
 	),
 
 	// Felder
@@ -314,6 +314,23 @@ $GLOBALS['TL_DCA']['tl_teamtournament'] = array
 				'tl_class'            => 'w50'
 			),
 			'sql'                     => "varchar(2) NOT NULL default ''"
+		),
+		'calculateResults' => array
+		(
+			'label'                   => &$GLOBALS['TL_LANG']['tl_teamtournament']['calculateResults'],
+			'exclude'                 => true,
+			'filter'                  => true,
+			// Neue Turniere rechnen von sich aus, bestehende nicht: Deren
+			// Spalte ist nach der Migration leer, und die von Hand
+			// eingetragenen Mannschaftspunkte bleiben damit unangetastet, bis
+			// der Haken hier ausdrücklich gesetzt wird
+			'default'                 => 1,
+			'inputType'               => 'checkbox',
+			'eval'                    => array
+			(
+				'tl_class'            => 'w50'
+			),
+			'sql'                     => "char(1) NOT NULL default ''"
 		),
 		'complete' => array
 		(

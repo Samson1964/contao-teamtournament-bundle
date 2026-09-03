@@ -16,8 +16,9 @@ $GLOBALS['TL_LANG']['tl_teamtournament_matches']['round'] = array('Runde', 'Numm
 $GLOBALS['TL_LANG']['tl_teamtournament_matches']['board'] = array('Tisch', 'Nummer des Tisches (Paarungsnummer)');
 
 $GLOBALS['TL_LANG']['tl_teamtournament_matches']['results_legend'] = 'Ergebnis';
-$GLOBALS['TL_LANG']['tl_teamtournament_matches']['resultTeam1'] = array('Punkte Mannschaft 1', 'Punkte der ersten Mannschaft');
-$GLOBALS['TL_LANG']['tl_teamtournament_matches']['resultTeam2'] = array('Punkte Mannschaft 2', 'Punkte der zweiten Mannschaft');
+$GLOBALS['TL_LANG']['tl_teamtournament_matches']['overrideResult'] = array('Ergebnis überschreiben', 'Rechnet das Turnier die Mannschaftspunkte aus den Brettpunkten, lässt dieser Haken für diesen einen Wettkampf die Handeingabe zu — etwa für eine kampflose Wertung oder eine Entscheidung am grünen Tisch.');
+$GLOBALS['TL_LANG']['tl_teamtournament_matches']['resultTeam1'] = array('Punkte Mannschaft 1', 'Punkte der ersten Mannschaft, mit Komma oder Punkt (z.B. 4,5)');
+$GLOBALS['TL_LANG']['tl_teamtournament_matches']['resultTeam2'] = array('Punkte Mannschaft 2', 'Punkte der zweiten Mannschaft, mit Komma oder Punkt (z.B. 3,5)');
 
 $GLOBALS['TL_LANG']['tl_teamtournament_matches']['publish_legend'] = 'Veröffentlichung';
 $GLOBALS['TL_LANG']['tl_teamtournament_matches']['published'] = array('Veröffentlicht', 'Wettkampf veröffentlicht');
@@ -29,6 +30,7 @@ $GLOBALS['TL_LANG']['tl_teamtournament_matches']['published'] = array('Veröffen
 $GLOBALS['TL_LANG']['tl_teamtournament_matches']['new'] = array('Neuer Wettkampf', 'Neuen Wettkampf anlegen');
 $GLOBALS['TL_LANG']['tl_teamtournament_matches']['edit'] = array('Bretter des Wettkampfs bearbeiten', 'Bretter des Wettkampfs %s bearbeiten');
 $GLOBALS['TL_LANG']['tl_teamtournament_matches']['editHeader'] = array('Wettkampf bearbeiten', 'Wettkampf %s bearbeiten');
+$GLOBALS['TL_LANG']['tl_teamtournament_matches']['results'] = array('Aufstellung und Ergebnisse', 'Aufstellung und Ergebnisse des Wettkampfs %s erfassen');
 $GLOBALS['TL_LANG']['tl_teamtournament_matches']['copy'] = array('Wettkampf kopieren', 'Wettkampf %s kopieren');
 $GLOBALS['TL_LANG']['tl_teamtournament_matches']['cut'] = array('Wettkampf verschieben', 'Wettkampf %s verschieben');
 $GLOBALS['TL_LANG']['tl_teamtournament_matches']['delete'] = array('Wettkampf löschen', 'Wettkampf %s löschen');

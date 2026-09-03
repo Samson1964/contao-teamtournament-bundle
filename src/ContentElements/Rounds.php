@@ -14,6 +14,7 @@ namespace Schachbulle\ContaoTeamtournamentBundle\ContentElements;
 use Contao\ContentElement;
 use Contao\Database;
 use Schachbulle\ContaoTeamtournamentBundle\Classes\Helfer;
+use Schachbulle\ContaoTeamtournamentBundle\Classes\Wertung;
 
 /**
  * Inhaltselement „Rundenübersicht".
@@ -216,11 +217,17 @@ class Rounds extends ContentElement
 	 */
 	public static function getErgebnis($erg1, $erg2): string
 	{
-		if (!$erg1 && !$erg2)
+		// Geprüft wird auf „nichts eingetragen", nicht auf „unwahr": Ein
+		// Wettkampf, der 0:4 ausgegangen ist, hat auf der einen Seite eine
+		// Null stehen, und die wäre in PHP unwahr
+		$strErg1 = trim((string) $erg1);
+		$strErg2 = trim((string) $erg2);
+
+		if ('' === $strErg1 && '' === $strErg2)
 		{
 			return '-';
 		}
 
-		return str_replace('.', ',', sprintf('%0.1f', (float) $erg1).' : '.sprintf('%0.1f', (float) $erg2));
+		return Wertung::ausZahl($strErg1).' : '.Wertung::ausZahl($strErg2);
 	}
 }

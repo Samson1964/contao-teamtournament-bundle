@@ -14,6 +14,7 @@ use Contao\DataContainer;
 use Contao\Database;
 use Contao\DC_Table;
 use Contao\Input;
+use Schachbulle\ContaoTeamtournamentBundle\Classes\Wertung;
 
 /*
  * Datenbereich tl_teamtournament_games
@@ -27,6 +28,15 @@ $GLOBALS['TL_DCA']['tl_teamtournament_games'] = array
 		'ptable'                      => 'tl_teamtournament_matches',
 		'switchToEdit'                => true,
 		'enableVersioning'            => true,
+		// Jede Änderung an einem Brett kann das Mannschaftsergebnis verschieben
+		'onsubmit_callback'           => array
+		(
+			array('tl_teamtournament_games', 'rechneErgebnis')
+		),
+		'ondelete_callback'           => array
+		(
+			array('tl_teamtournament_games', 'rechneErgebnisOhne')
+		),
 		'sql' => array
 		(
 			'keys' => array
@@ -259,6 +269,39 @@ class tl_teamtournament_games extends Backend
 	}
 
 	/**
+	 * Rechnet das Mannschaftsergebnis nach einer Änderung am Brett neu.
+	 *
+	 * Läuft als onsubmit_callback, also nach dem Schreiben der Partie.
+	 *
+	 * @param DataContainer|null $dc Der aufrufende Data Container
+	 */
+	public function rechneErgebnis($dc = null): void
+	{
+		if (null !== $dc && $dc->id)
+		{
+			Wertung::schreibeWettkampf(Wertung::getWettkampf((int) $dc->id));
+		}
+	}
+
+	/**
+	 * Rechnet das Mannschaftsergebnis vor dem Löschen einer Partie neu.
+	 *
+	 * Der ondelete_callback läuft, solange der Datensatz noch in der Tabelle
+	 * steht — ein „danach" gibt es beim DC_Table nicht. Die zu löschende Partie
+	 * wird deshalb ausdrücklich von der Summe ausgenommen.
+	 *
+	 * @param DataContainer|null $dc      Der aufrufende Data Container
+	 * @param int                $undoId  Kennung des Undo-Eintrags, hier ungenutzt
+	 */
+	public function rechneErgebnisOhne($dc = null, $undoId = 0): void
+	{
+		if (null !== $dc && $dc->id)
+		{
+			Wertung::schreibeWettkampf(Wertung::getWettkampf((int) $dc->id), (int) $dc->id);
+		}
+	}
+
+	/**
 	 * Beschriftet eine Partie in der Listenansicht.
 	 *
 	 * @param array<string, mixed> $arrRow Der Datensatz aus tl_teamtournament_games
@@ -392,17 +435,14 @@ class tl_teamtournament_games extends Backend
 	 *
 	 * @return array<string, string> Ergebnis => Beschriftung
 	 */
-	public function getResults(DataContainer $dc): array
+	public function getResults($dc = null): array
 	{
-		return array
-		(
-			'1:0' => '1:0',
-			'0:1' => '0:1',
-			'½:½' => '½:½',
-			'+:-' => '+:-',
-			'-:+' => '-:+',
-			'-:-' => '-:-'
-		);
+		// Die Liste kommt aus der Wertung, damit Auswahl und Punktzuordnung
+		// nicht auseinanderlaufen können: Ein hier angebotenes Ergebnis, das
+		// die Wertung nicht kennt, zählte beim Mannschaftsergebnis nicht mit
+		$arrErgebnisse = array_keys(Wertung::ERGEBNISSE);
+
+		return array_combine($arrErgebnisse, $arrErgebnisse);
 	}
 
 	/**
@@ -415,7 +455,7 @@ class tl_teamtournament_games extends Backend
 	 *
 	 * @return array<string, string> Kürzel => Beschriftung
 	 */
-	public function getColors(DataContainer $dc): array
+	public function getColors($dc = null): array
 	{
 		return array
 		(

@@ -1,5 +1,47 @@
 # Mannschaftsturniere-Bundle Changelog
 
+## Version 0.4.0 (2026-09-03)
+
+**Wichtig beim Aktualisieren:** Es kommen zwei Datenbankfelder dazu
+(`tl_teamtournament.calculateResults` und `tl_teamtournament_matches.overrideResult`).
+Nach dem Update einmal die Datenbank aktualisieren (Contao Manager → Systemwartung oder
+`contao:migrate`).
+
+**Bestehende Turniere rechnen zunächst nicht.** Das neue Feld ist bei ihnen leer, die von
+Hand eingetragenen Mannschaftspunkte bleiben also unangetastet. Wer die Berechnung will,
+setzt den Haken am Turnier; neu angelegte Turniere rechnen von sich aus.
+
+* Add: **Mannschaftspunkte werden aus den Brettpunkten errechnet.** Am Turnier steht die
+  Vorgabe („Mannschaftspunkte aus den Brettpunkten errechnen"), am einzelnen Wettkampf
+  hebt der Haken „Ergebnis überschreiben" sie auf — für kampflose Wertungen und
+  Entscheidungen am grünen Tisch. Gerechnet wird nach jeder Änderung an einem Brett und
+  nach dem Speichern des Wettkampfes. Solange gerechnet wird, sind die beiden Punktefelder
+  gesperrt, statt beim Speichern kommentarlos überschrieben zu werden.
+* Add: **Maske „Aufstellung und Ergebnisse"** je Wettkampf, erreichbar über ein eigenes
+  Symbol in der Wettkampfliste. Oben werden die Spieler beider Mannschaften angehakt —
+  daraus entstehen die Bretter in Brettreihenfolge, der erste angehakte Spieler der einen
+  Mannschaft trifft auf den ersten der anderen, die Farbe wechselt von Brett zu Brett.
+  Unten stehen die Bretter mit den Spielernamen links und rechts und der Ergebnisauswahl
+  in der Mitte. Bretter, deren Paarung unverändert bleibt, behalten ihr Ergebnis.
+* Fix: **Ein Wettkampf, der 0:4 ausging, zeigte in der Backend-Liste gar kein Ergebnis.**
+  Geprüft wurde `if ($arrRow['resultTeam1'])` — und eine Null ist in PHP unwahr.
+  Dieselbe Verwechslung steckte in der Rundenübersicht im Frontend.
+* Fix: **Ein noch nicht gespielter Wettkampf zeigte „0,0" statt eines leeren Feldes.**
+  Beim nächsten Speichern landete das als gewertetes 0:0 in der Datenbank. Ein leeres
+  Ergebnis bleibt jetzt leer.
+* Fix: **Eine unbrauchbare Eingabe im Punktefeld wurde stillschweigend zu „0,0".** Jetzt
+  bleibt der bisherige Wert stehen und es erscheint eine Fehlermeldung. Angenommen werden
+  Komma, Punkt und das Zeichen ½ (also auch „3½" für 3,5).
+* Fix: **Die Kopfzeile der Paarungsliste zeigte die Kennung statt der Mannschaftsnamen.**
+  Die beiden Mannschaftsfelder haben jetzt einen `foreignKey`; den löst Contao mit einer
+  eigenen Abfrage auf, während es beim `options_callback` die Rückrufklasse mit einem
+  fremden Data Container aufrief.
+* Change: **Die Wettkämpfe stehen jetzt nach Runde absteigend und Tisch aufsteigend**,
+  die jüngste Runde also oben. Dazu kommt ein Filter für die Runde in der Kopfleiste.
+* Change: Die Auswahlliste der Brettergebnisse kommt aus derselben Stelle wie die
+  Punktzuordnung (`Classes\Wertung`). Beide können damit nicht mehr auseinanderlaufen —
+  ein auswählbares Ergebnis, das die Wertung nicht kennt, zählte sonst nicht mit.
+
 ## Version 0.3.0 (2026-09-03)
 
 Diese Fassung läuft unter **Contao 4.13 und Contao 5** und unter **PHP bis 8.4**. Sie ist

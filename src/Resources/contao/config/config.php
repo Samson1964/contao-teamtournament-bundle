@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 use Contao\Config;
 use Contao\System;
+use Schachbulle\ContaoTeamtournamentBundle\Classes\Ergebnismaske;
 use Schachbulle\ContaoTeamtournamentBundle\ContentElements\Captain;
 use Schachbulle\ContaoTeamtournamentBundle\ContentElements\LineUp;
 use Schachbulle\ContaoTeamtournamentBundle\ContentElements\Rounds;
@@ -38,11 +39,17 @@ if (null !== $objRequest && System::getContainer()->get('contao.routing.scope_ma
 
 /*
  * Backend-Modul
+ *
+ * Der Eintrag „results" ist eine eigene Aktion des Moduls: Contao ruft die
+ * genannte Methode auf, sobald die Adresse „&key=results" enthält, und setzt
+ * deren Rückgabe in den Hauptbereich der Backend-Seite. Das funktioniert in
+ * Contao 4.13 und Contao 5 gleichermaßen (Backend::getBackendModule()).
  */
 $GLOBALS['BE_MOD']['content']['teamtournament'] = array
 (
-	'tables' => array('tl_teamtournament', 'tl_teamtournament_teams', 'tl_teamtournament_players', 'tl_teamtournament_matches', 'tl_teamtournament_games'),
-	'icon'   => 'bundles/contaoteamtournament/images/icon.png',
+	'tables'  => array('tl_teamtournament', 'tl_teamtournament_teams', 'tl_teamtournament_players', 'tl_teamtournament_matches', 'tl_teamtournament_games'),
+	'results' => array(Ergebnismaske::class, 'maske'),
+	'icon'    => 'bundles/contaoteamtournament/images/icon.png',
 );
 
 /*

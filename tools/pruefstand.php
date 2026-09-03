@@ -104,6 +104,9 @@ $api = array(
 	'Contao\CoreBundle\Image\Studio\FigureBuilder' => 'buildIfResourceExists',
 	'Contao\CoreBundle\Image\Studio\Figure' => 'applyLegacyTemplateData',
 	'Contao\CoreBundle\Intl\Countries' => 'getCountries',
+	'Contao\Controller' => 'addToUrl',
+	'Contao\Message' => 'addError',
+	'Symfony\Component\HttpFoundation\RedirectResponse' => null,
 );
 
 foreach ($api as $klasse => $methode)
@@ -119,6 +122,14 @@ foreach (array('from', 'setSize', 'enableLightbox', 'setLightboxGroupIdentifier'
 
 pruefe('StringUtil::specialchars()', method_exists('Contao\StringUtil', 'specialchars'), $fehler);
 pruefe('StringUtil::binToUuid()', method_exists('Contao\StringUtil', 'binToUuid'), $fehler);
+pruefe('Message::addConfirmation()', method_exists('Contao\Message', 'addConfirmation'), $fehler);
+pruefe('Message::generate()', method_exists('Contao\Message', 'generate'), $fehler);
+pruefe('Database\Result::row()', method_exists('Contao\Database\Result', 'row'), $fehler);
+
+// Message::addError() ohne Scope-Argument: in 4.13 ist der Vorgabewert TL_MODE,
+// in 5.7 null — ein selbst uebergebenes TL_MODE waere unter Contao 5 toedlich
+$refMessage = new ReflectionMethod('Contao\Message', 'addError');
+pruefe('Message::addError() ohne zweites Argument aufrufbar', $refMessage->getNumberOfRequiredParameters() <= 1, $fehler);
 
 // Dinge, die es unter Contao 5 nicht mehr geben darf und die das Bundle
 // deshalb nicht mehr benutzt
@@ -146,6 +157,20 @@ foreach (glob($bundle.'/src/Resources/contao/languages/de/*.php') as $datei)
 	require $datei;
 	pruefe(basename($datei), true, $fehler);
 }
+
+// 3b. Ein Minimalbehaelter, damit die config.php laufen kann. Der leere
+//     RequestStack liefert keine Anfrage — damit ueberspringt die config.php
+//     den Frontend-Zweig, ohne dass Contaos Dienste noetig waeren.
+$objContainer = new Symfony\Component\DependencyInjection\ContainerBuilder();
+$objContainer->setParameter('kernel.debug', false);
+$objContainer->set('request_stack', new Symfony\Component\HttpFoundation\RequestStack());
+Contao\System::setContainer($objContainer);
+
+echo "\nKonfiguration\n";
+require $bundle.'/src/Resources/contao/config/config.php';
+pruefe('config.php geladen', true, $fehler);
+pruefe('Backend-Modul teamtournament angemeldet', isset($GLOBALS['BE_MOD']['content']['teamtournament']), $fehler);
+pruefe('drei Inhaltselemente in TL_CTE', 3 === \count($GLOBALS['TL_CTE']['chess'] ?? array()), $fehler);
 
 // 4. DCA-Dateien laden. Dabei werden DC_Table::class, die DataContainer-
 //    Konstanten und die Rueckrufklassen (extends Backend) tatsaechlich
@@ -179,7 +204,30 @@ foreach (array('LineUp', 'Captain', 'Rounds') as $element)
 }
 
 pruefe('Rounds::getErgebnis(4, 4) == "4,0 : 4,0"', '4,0 : 4,0' === Schachbulle\ContaoTeamtournamentBundle\ContentElements\Rounds::getErgebnis(4, 4), $fehler);
-pruefe('Rounds::getErgebnis(0, 0) == "-"', '-' === Schachbulle\ContaoTeamtournamentBundle\ContentElements\Rounds::getErgebnis(0, 0), $fehler);
+pruefe('Rounds::getErgebnis(leer) == "-"', '-' === Schachbulle\ContaoTeamtournamentBundle\ContentElements\Rounds::getErgebnis('', ''), $fehler);
+// Der gemeldete Fehler: 0:4 muss angezeigt werden, nicht als "nicht gewertet" gelten
+pruefe('Rounds::getErgebnis(0, 4) == "0,0 : 4,0"', '0,0 : 4,0' === Schachbulle\ContaoTeamtournamentBundle\ContentElements\Rounds::getErgebnis('0', '4'), $fehler);
+
+// 6b. Ergebnismaske und Wertung
+echo "\nErgebnismaske und Wertung\n";
+pruefe('Klasse Ergebnismaske', class_exists('Schachbulle\ContaoTeamtournamentBundle\Classes\Ergebnismaske'), $fehler);
+pruefe('Ergebnismaske::maske() vorhanden', method_exists('Schachbulle\ContaoTeamtournamentBundle\Classes\Ergebnismaske', 'maske'), $fehler);
+pruefe('Ergebnismaske ist parameterlos erzeugbar (System::importStatic)', (new ReflectionClass('Schachbulle\ContaoTeamtournamentBundle\Classes\Ergebnismaske'))->getConstructor() === null, $fehler);
+pruefe('BE_MOD-Eintrag results zeigt auf die Ergebnismaske', isset($GLOBALS['BE_MOD']['content']['teamtournament']['results']), $fehler);
+
+$arrWertung = Schachbulle\ContaoTeamtournamentBundle\Classes\Wertung::punkte('½:½');
+pruefe('Wertung::punkte(remis) == 0.5/0.5', array(0.5, 0.5) === $arrWertung, $fehler);
+pruefe('Wertung::inZahl("4,5") == "4.5"', '4.5' === Schachbulle\ContaoTeamtournamentBundle\Classes\Wertung::inZahl('4,5'), $fehler);
+pruefe('Wertung::ausZahl("") bleibt leer', '' === Schachbulle\ContaoTeamtournamentBundle\Classes\Wertung::ausZahl(''), $fehler);
+
+// Die Auswahlliste der Partien und die Punktzuordnung duerfen nicht auseinanderlaufen
+$objGames = (new ReflectionClass('tl_teamtournament_games'))->newInstanceWithoutConstructor();
+$refResults = new ReflectionMethod('tl_teamtournament_games', 'getResults');
+pruefe(
+	'Auswahlliste der Ergebnisse deckt sich mit der Wertung',
+	array_keys(Schachbulle\ContaoTeamtournamentBundle\Classes\Wertung::ERGEBNISSE) === array_keys($refResults->invoke($objGames, null)),
+	$fehler
+);
 
 // 7. Altersberechnung
 echo "\nAltersberechnung\n";
@@ -227,7 +275,7 @@ else
 {
 	$inhalt = file_get_contents($container);
 
-	foreach (array('contao.image.studio', 'contao.image.sizes', 'contao.intl.countries', 'contao.routing.scope_matcher', 'request_stack') as $dienst)
+	foreach (array('contao.image.studio', 'contao.image.sizes', 'contao.intl.countries', 'contao.routing.scope_matcher', 'contao.csrf.token_manager', 'request_stack') as $dienst)
 	{
 		pruefe($dienst.' oeffentlich', false !== strpos($inhalt, "'".$dienst."' =>"), $fehler);
 	}

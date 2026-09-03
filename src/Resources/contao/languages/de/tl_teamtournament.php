@@ -26,6 +26,9 @@ $GLOBALS['TL_LANG']['tl_teamtournament']['url'] = array('Homepage', 'Internetadr
 $GLOBALS['TL_LANG']['tl_teamtournament']['language_legend'] = 'Sprache';
 $GLOBALS['TL_LANG']['tl_teamtournament']['language'] = array('Sprache', 'Sprache von Frontend-Ausgaben');
 
+$GLOBALS['TL_LANG']['tl_teamtournament']['results_legend'] = 'Wertung';
+$GLOBALS['TL_LANG']['tl_teamtournament']['calculateResults'] = array('Mannschaftspunkte aus den Brettpunkten errechnen', 'Die Punkte eines Wettkampfs ergeben sich dann aus den Ergebnissen der Einzelpartien und lassen sich nicht mehr von Hand eintragen. Einzelne Wettkämpfe können davon ausgenommen werden.');
+
 $GLOBALS['TL_LANG']['tl_teamtournament']['publish_legend'] = 'Veröffentlichung';
 $GLOBALS['TL_LANG']['tl_teamtournament']['complete'] = array('Komplett', 'Der Wettbewerb ist vollständig erfaßt und alle Daten der Kindtabellen sind komplett.');
 $GLOBALS['TL_LANG']['tl_teamtournament']['published'] = array('Veröffentlicht', 'Wettbewerb veröffentlicht');
