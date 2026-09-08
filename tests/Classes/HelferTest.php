@@ -38,6 +38,37 @@ class HelferTest extends TestCase
 	}
 
 	/**
+	 * Prüft, dass ohne hinterlegtes Bild kein Markup entsteht.
+	 *
+	 * Der Fall wird abgefangen, bevor der Bilderdienst überhaupt geholt wird —
+	 * deshalb läuft die Prüfung ohne Symfony-Behälter.
+	 *
+	 * @dataProvider leeresBildProvider
+	 *
+	 * @param mixed $varBild Ein Wert, der kein Bild bezeichnet
+	 */
+	public function testMiniaturOhneBild($varBild): void
+	{
+		$this->assertSame('', Helfer::miniatur($varBild));
+	}
+
+	/**
+	 * Liefert die leeren Bildwerte für testMiniaturOhneBild().
+	 *
+	 * @return array<string, array{0: mixed}>
+	 */
+	public function leeresBildProvider(): array
+	{
+		return array
+		(
+			'null'            => array(null),
+			'leerer String'   => array(''),
+			'Null als Zahl'   => array(0),
+			'Null als String' => array('0'),
+		);
+	}
+
+	/**
 	 * Liefert die Prüffälle für testAlter().
 	 *
 	 * @return array<string, array{0: string, 1: string, 2: int|null}>

@@ -11,8 +11,10 @@ declare(strict_types=1);
 
 use Contao\Backend;
 use Contao\DataContainer;
+use Contao\Database;
 use Contao\DC_Table;
 use Schachbulle\ContaoHelperBundle\Classes\Helper;
+use Schachbulle\ContaoTeamtournamentBundle\Classes\Helfer;
 
 /*
  * Datenbereich tl_teamtournament_players
@@ -26,6 +28,13 @@ $GLOBALS['TL_DCA']['tl_teamtournament_players'] = array
 		'ptable'                      => 'tl_teamtournament_teams',
 		'switchToEdit'                => true,
 		'enableVersioning'            => true,
+		// Trägt beim Anlegen die nächste freie Brettnummer ein. Ein 'default'
+		// am Feld reicht dafür nicht: Der Wert hängt von der Mannschaft ab und
+		// steht erst fest, wenn der Datensatz seine pid hat.
+		'oncreate_callback'           => array
+		(
+			array('tl_teamtournament_players', 'setzeBrettnummer')
+		),
 		'sql' => array
 		(
 			'keys' => array
@@ -42,8 +51,10 @@ $GLOBALS['TL_DCA']['tl_teamtournament_players'] = array
 		'sorting' => array
 		(
 			'mode'                    => DataContainer::MODE_PARENT,
-			'fields'                  => array('surname ASC', 'prename ASC'),
-			'flag'                    => DataContainer::SORT_DESC,
+			// Die Brettreihenfolge ist die natürliche Ordnung einer Aufstellung;
+			// Spieler ohne Brettnummer (0) stehen damit oben und fallen auf
+			'fields'                  => array('board ASC', 'surname ASC', 'prename ASC'),
+			'flag'                    => DataContainer::SORT_ASC,
 			'headerFields'            => array('name'),
 			'panelLayout'             => 'filter;sort;search,limit',
 			'child_record_callback'   => array('tl_teamtournament_players', 'listPlayers'),
@@ -145,8 +156,10 @@ $GLOBALS['TL_DCA']['tl_teamtournament_players'] = array
 			'label'                   => &$GLOBALS['TL_LANG']['tl_teamtournament_players']['board'],
 			'exclude'                 => true,
 			'search'                  => false,
+			'sorting'                 => true,
+			'flag'                    => DataContainer::SORT_ASC,
 			'inputType'               => 'text',
-			'eval'                    => array('maxlength'=>2, 'tl_class'=>'w50'),
+			'eval'                    => array('rgxp'=>'natural', 'maxlength'=>2, 'tl_class'=>'w50'),
 			'sql'                     => "int(2) unsigned NOT NULL default '0'"
 		),
 		'surname' => array
@@ -324,14 +337,66 @@ class tl_teamtournament_players extends Backend
 	}
 
 	/**
+	 * Trägt beim Anlegen eines Spielers die nächste freie Brettnummer ein.
+	 *
+	 * Gesucht wird die höchste bereits vergebene Nummer innerhalb derselben
+	 * Mannschaft; der neue Spieler bekommt die nächste. Lücken werden nicht
+	 * gefüllt — wer an Brett 3 nachträglich jemanden einsetzen will, trägt die
+	 * Nummer ohnehin von Hand ein.
+	 *
+	 * Der Rückruf läuft in DC_Table unmittelbar nach dem INSERT und noch vor
+	 * der Weiterleitung in die Eingabemaske; das nachgereichte UPDATE ist dort
+	 * also schon sichtbar. Der frisch angelegte Datensatz wird dabei selbst
+	 * nicht mitgezählt, weil seine Brettnummer noch 0 ist.
+	 *
+	 * @param string               $strTable  Name der Tabelle, hier immer
+	 *                                        tl_teamtournament_players
+	 * @param int                  $intId     Kennung des neuen Datensatzes
+	 * @param array<string, mixed> $arrSet    Die eingefügten Werte; enthält die pid
+	 * @param DataContainer        $dc        Der aufrufende Data Container, hier ungenutzt
+	 */
+	public function setzeBrettnummer($strTable, $intId, $arrSet, $dc = null): void
+	{
+		$intMannschaft = (int) ($arrSet['pid'] ?? 0);
+
+		if (!$intMannschaft)
+		{
+			return;
+		}
+
+		$objMax = Database::getInstance()
+			->prepare("SELECT MAX(board) AS maxBoard FROM tl_teamtournament_players WHERE pid=?")
+			->execute($intMannschaft);
+
+		$intBrett = (int) $objMax->maxBoard + 1;
+
+		// Das Feld fasst nur zwei Stellen
+		if ($intBrett > 99)
+		{
+			return;
+		}
+
+		Database::getInstance()
+			->prepare("UPDATE tl_teamtournament_players SET board=? WHERE id=?")
+			->execute($intBrett, $intId);
+	}
+
+	/**
 	 * Beschriftet einen Spieler in der Listenansicht.
+	 *
+	 * Vorangestellt ist die Brettnummer in eckigen Klammern, dahinter steht das
+	 * Foto als kleines Vorschaubild, sofern eines hinterlegt ist. Spieler ohne
+	 * Brettnummer bekommen statt der Null einen Strich, damit sie auffallen.
 	 *
 	 * @param array<string, mixed> $arrRow Der Datensatz aus tl_teamtournament_players
 	 *
-	 * @return string Nachname und Vorname, durch Komma getrennt
+	 * @return string Brettnummer, Name und Vorschaubild als Markup
 	 */
 	public function listPlayers($arrRow): string
 	{
-		return trim($arrRow['surname'].', '.$arrRow['prename'], ', ');
+		$strName = trim($arrRow['surname'].', '.$arrRow['prename'], ', ');
+		$strBrett = $arrRow['board'] ? (string) $arrRow['board'] : '–';
+
+		return '['.$strBrett.'] '.$strName.' '.Helfer::miniatur($arrRow['singleSRC'] ?? null, 16, $strName);
 	}
 }

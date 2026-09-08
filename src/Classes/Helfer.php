@@ -94,6 +94,63 @@ class Helfer
 	}
 
 	/**
+	 * Erzeugt ein quadratisches Vorschaubild für die Backend-Listen.
+	 *
+	 * Anders als bild() kommt hier kein <figure> und keine Lightbox heraus,
+	 * sondern ein einzelnes <img> in fester Kantenlänge. Zugeschnitten wird
+	 * mittig ('crop'), damit die Zeilenhöhe der Liste gleich bleibt, egal ob
+	 * das Foto hoch oder quer ist.
+	 *
+	 * Der zurückgegebene Pfad ist relativ zum Projektverzeichnis. Im Backend
+	 * genügt das, weil die Seite ein <base>-Element trägt.
+	 *
+	 * @param mixed $varBild   Kennung der Datei aus dem Dateibaum, binär oder in
+	 *                         lesbarer Schreibweise; ein leerer Wert liefert eine
+	 *                         leere Zeichenkette
+	 * @param int   $intKante  Kantenlänge in Bildpunkten
+	 * @param string $strTitel Titel-Attribut, etwa der Name des Spielers
+	 *
+	 * @return string Das <img>-Element, oder eine leere Zeichenkette, wenn kein
+	 *                Bild hinterlegt ist oder die Datei fehlt
+	 */
+	public static function miniatur($varBild, int $intKante = 16, string $strTitel = ''): string
+	{
+		if (!$varBild)
+		{
+			return '';
+		}
+
+		$objFigure = System::getContainer()
+			->get('contao.image.studio')
+			->createFigureBuilder()
+			->from($varBild)
+			->setSize(array($intKante, $intKante, 'crop'))
+			->buildIfResourceExists();
+
+		if (null === $objFigure)
+		{
+			return '';
+		}
+
+		// getImageSrc() gibt es in beiden Fassungen und liefert die fertige
+		// Adresse, notfalls mit dem eingestellten Vorspann für statische Dateien
+		$strQuelle = $objFigure->getImage()->getImageSrc();
+
+		if ('' === $strQuelle)
+		{
+			return '';
+		}
+
+		return sprintf(
+			'<img src="%s" width="%d" height="%d" alt="" title="%s" style="vertical-align:middle">',
+			$strQuelle,
+			$intKante,
+			$intKante,
+			StringUtil::specialchars($strTitel)
+		);
+	}
+
+	/**
 	 * Liefert die Kennung des Standardbildes aus den Einstellungen.
 	 *
 	 * Turniere der Frauen und der Männer haben je ein eigenes Ersatzbild, das

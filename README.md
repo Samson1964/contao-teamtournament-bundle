@@ -27,7 +27,7 @@ ineinander verschachtelte Tabellen:
 | --- | --- |
 | `tl_teamtournament` | Das Turnier: Name, Ort, Land, Zeitraum, Sprache der Ausgabe, Bildgrößen |
 | `tl_teamtournament_teams` | Die Mannschaften eines Turniers samt Kapitän und Logo |
-| `tl_teamtournament_players` | Die Spieler einer Mannschaft mit Brett, Titel, Elo und DWZ |
+| `tl_teamtournament_players` | Die Spieler einer Mannschaft mit Brett, Titel, Elo und DWZ. Beim Anlegen steht die nächste freie Brettnummer schon in der Maske |
 | `tl_teamtournament_matches` | Die Wettkämpfe: Runde, Tisch, beide Mannschaften, Ergebnis |
 | `tl_teamtournament_games` | Die Einzelpartien eines Wettkampfes mit Brett, Farbe und Ergebnis |
 

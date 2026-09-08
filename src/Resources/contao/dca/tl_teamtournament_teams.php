@@ -72,18 +72,20 @@ $GLOBALS['TL_DCA']['tl_teamtournament_teams'] = array
 		),
 		'operations' => array
 		(
-			'edit' => array
-			(
-				'label'               => &$GLOBALS['TL_LANG']['tl_teamtournament_teams']['edit'],
-				'href'                => 'table=tl_teamtournament_players',
-				'icon'                => 'edit.svg'
-			),
+			// Erst die Mannschaft selbst, dann ihre Spieler — wie eine Ebene
+			// höher beim Wettbewerb
 			'editheader' => array
 			(
 				'label'               => &$GLOBALS['TL_LANG']['tl_teamtournament_teams']['editheader'],
 				'href'                => 'act=edit',
 				'icon'                => 'header.svg',
 				'button_callback'     => array('tl_teamtournament_teams', 'editHeader')
+			),
+			'edit' => array
+			(
+				'label'               => &$GLOBALS['TL_LANG']['tl_teamtournament_teams']['edit'],
+				'href'                => 'table=tl_teamtournament_players',
+				'icon'                => 'bundles/contaoteamtournament/images/players.png'
 			),
 			'copy' => array
 			(

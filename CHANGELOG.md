@@ -1,5 +1,30 @@
 # Mannschaftsturniere-Bundle Changelog
 
+## Version 0.4.1 (2026-09-08)
+
+Nur das Backend, keine Änderung an der Datenbank.
+
+* Add: Beim Anlegen eines Spielers steht die nächste freie Brettnummer schon in der Maske,
+  statt einer Null. Ermittelt wird sie aus der höchsten bereits vergebenen Nummer derselben
+  Mannschaft. Ein `default` am Feld hätte das nicht gekonnt: Der Wert hängt von der
+  Mannschaft ab und steht erst fest, wenn der Datensatz seine `pid` hat. Der
+  `oncreate_callback` läuft in beiden Contao-Fassungen unmittelbar nach dem Einfügen und
+  noch vor dem Sprung in die Eingabemaske.
+* Add: Die Spielerliste zeigt die Brettnummer in eckigen Klammern vor dem Namen und das
+  Foto als 16×16-Vorschaubild dahinter. Spieler ohne Brettnummer bekommen einen Strich
+  statt der Null.
+* Change: Die Spieler stehen nach Brettnummer sortiert, nicht mehr alphabetisch; die
+  Brettnummer lässt sich jetzt auch über die Sortierleiste wählen. Spieler ohne Nummer
+  stehen damit oben und fallen auf.
+* Change: Die Kindtabellen haben eigene Symbole statt des Bleistifts, der überall gleich
+  aussah: Beim Wettbewerb führt `teams.png` zu den Mannschaften, bei der Mannschaft
+  `players.png` zu den Spielern. Beide stehen jetzt an zweiter Stelle — erst der Datensatz
+  selbst, dann seine Kinder.
+* Change: Beschriftungen der Bearbeitungssymbole durchgesehen. Sie sind vollständig und
+  durchgehend deutsch; ausgebessert wurden „Wettbewerbdetails" (fehlendes Fugen-s), „Detail
+  des Spielers" (Einzahl) und drei unnötig lange Bezeichnungen.
+* Fix: Das Feld Brettnummer nimmt nur noch Ziffern an (`rgxp` = `natural`).
+
 ## Version 0.4.0 (2026-09-03)
 
 **Wichtig beim Aktualisieren:** Es kommen zwei Datenbankfelder dazu

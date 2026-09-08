@@ -69,18 +69,22 @@ $GLOBALS['TL_DCA']['tl_teamtournament'] = array
 		),
 		'operations' => array
 		(
-			'edit' => array
-			(
-				'label'               => &$GLOBALS['TL_LANG']['tl_teamtournament']['edit'],
-				'href'                => 'table=tl_teamtournament_teams',
-				'icon'                => 'edit.svg'
-			),
+			// Der Datensatz selbst steht voran, danach folgen die Kindtabellen in
+			// ihrer natürlichen Reihenfolge: erst die Mannschaften, dann die
+			// Wettkämpfe. Die Kindtabellen tragen ein eigenes Symbol, damit sie
+			// sich nicht gegenseitig und nicht dem Bleistift gleichen.
 			'editheader' => array
 			(
 				'label'               => &$GLOBALS['TL_LANG']['tl_teamtournament']['editheader'],
 				'href'                => 'act=edit',
 				'icon'                => 'header.svg',
 				'button_callback'     => array('tl_teamtournament', 'editHeader')
+			),
+			'edit' => array
+			(
+				'label'               => &$GLOBALS['TL_LANG']['tl_teamtournament']['edit'],
+				'href'                => 'table=tl_teamtournament_teams',
+				'icon'                => 'bundles/contaoteamtournament/images/teams.png'
 			),
 			'matches' => array
 			(
