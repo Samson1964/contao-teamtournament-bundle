@@ -16,6 +16,7 @@ use Contao\DC_Table;
 use Contao\Image;
 use Contao\StringUtil;
 use Contao\System;
+use Schachbulle\ContaoTeamtournamentBundle\Classes\Helfer;
 
 /*
  * Datenbereich tl_teamtournament
@@ -659,7 +660,9 @@ class tl_teamtournament extends Backend
 	 */
 	public function listTournaments($row, $label, DataContainer $dc, $args): array
 	{
-		$args[0] = $this->getDate($args[0]);
+		// Dieselbe Formatierung wie im Kopf der Kindlisten, damit ein Datum in
+		// der Übersicht und über den Mannschaften/Wettkämpfen gleich aussieht
+		$args[0] = Helfer::datum($row['toDate']);
 		$args[1] = '<b>'.$args[1].'</b>';
 
 		// Controller::generateImage() gibt es in Contao 5 nicht mehr,

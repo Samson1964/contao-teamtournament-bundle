@@ -12,18 +12,169 @@ declare(strict_types=1);
 namespace Schachbulle\ContaoTeamtournamentBundle\Classes;
 
 use Contao\Config;
+use Contao\Database;
 use Contao\StringUtil;
 use Contao\System;
 
 /**
- * Gemeinsame Hilfsfunktionen der drei Inhaltselemente.
+ * Gemeinsame Hilfsfunktionen für Inhaltselemente und Backend.
  *
  * Aufstellung, Mannschaftsführer und Rundenübersicht brauchen dieselben zwei
  * Dinge: ein Bild aus dem Dateibaum und das Alter eines Spielers zum
  * Turnierbeginn. Beides lag früher als Kopie in jeder der drei Klassen.
+ *
+ * Dazu kommen die Datumsformatierung und der Kopfbereich eines Wettbewerbs,
+ * die in mehreren Backend-Listen gleich aussehen sollen.
  */
 class Helfer
 {
+	/**
+	 * Formatiert ein gespeichertes Turnierdatum für die Anzeige.
+	 *
+	 * Die Datumsfelder von tl_teamtournament sind ganze Zahlen und dürfen laut
+	 * Feldhilfe unvollständig sein. Im Bestand kommen zwei Schreibweisen vor:
+	 *
+	 * - verkürzt, wie sie tl_teamtournament::putDate() schreibt: JJJJMMTT,
+	 *   JJJJMM oder JJJJ
+	 * - mit Nullen aufgefüllt, wie sie das Helper-Bundle schreibt: JJJJMM00
+	 *   oder JJJJ0000
+	 *
+	 * Beide ergeben dieselbe Anzeige: so viele Bestandteile, wie gefüllt sind.
+	 * Die Backend-Liste der Wettbewerbe und der Kopf der Kindlisten gehen
+	 * beide durch diese Funktion, damit sie nicht auseinanderlaufen.
+	 *
+	 * @param mixed $varWert Der Wert aus der Datenbank, als Zahl oder Zeichenkette
+	 *
+	 * @return string 'TT.MM.JJJJ', 'MM.JJJJ' oder 'JJJJ'; eine leere Zeichenkette
+	 *                für 0, null und ''. Ein Wert, der keiner der Schreibweisen
+	 *                entspricht, kommt unverändert zurück, damit er nicht
+	 *                stillschweigend aus der Anzeige verschwindet.
+	 */
+	public static function datum($varWert): string
+	{
+		$strRoh = trim((string) $varWert);
+
+		if ('' === $strRoh || '0' === $strRoh)
+		{
+			return '';
+		}
+
+		if (!ctype_digit($strRoh))
+		{
+			return $strRoh;
+		}
+
+		switch (\strlen($strRoh))
+		{
+			case 8: // JJJJMMTT, Monat und Tag dürfen 00 sein
+				$strJahr = substr($strRoh, 0, 4);
+				$strMonat = substr($strRoh, 4, 2);
+				$strTag = substr($strRoh, 6, 2);
+				break;
+
+			case 6: // JJJJMM, der Monat darf 00 sein
+				$strJahr = substr($strRoh, 0, 4);
+				$strMonat = substr($strRoh, 4, 2);
+				$strTag = '00';
+				break;
+
+			case 4: // JJJJ
+				$strJahr = $strRoh;
+				$strMonat = '00';
+				$strTag = '00';
+				break;
+
+			default:
+				return $strRoh;
+		}
+
+		if ('00' === $strMonat)
+		{
+			return $strJahr;
+		}
+
+		if ('00' === $strTag)
+		{
+			return $strMonat.'.'.$strJahr;
+		}
+
+		return $strTag.'.'.$strMonat.'.'.$strJahr;
+	}
+
+	/**
+	 * Baut den Kopfbereich für die Kindlisten eines Wettbewerbs.
+	 *
+	 * Mannschaftsliste und Wettkampfliste hängen beide an tl_teamtournament
+	 * und zeigen darum denselben Kopf: Turniername, Beginn, Ende, Ort und
+	 * Land. Contao selbst gibt die Datumsfelder dort roh aus („20260916"),
+	 * weil sie keine rgxp 'date' tragen — es sind ja keine Zeitstempel,
+	 * sondern Zahlen in der Form JJJJMMTT.
+	 *
+	 * Der Kopf wird deshalb aus dem Datensatz neu gebaut, statt die von Contao
+	 * vorbereiteten Werte umzuschreiben: Deren Schlüssel sind die übersetzten
+	 * Feldbeschriftungen, nicht die Feldnamen, und ließen sich nur über den
+	 * deutschen Wortlaut zuordnen.
+	 *
+	 * @param int $intTurnier Kennung des Wettbewerbs
+	 *
+	 * @return array<string, string> Beschriftung => Wert, leere Werte ausgelassen;
+	 *                               ein leeres Feld, wenn der Wettbewerb nicht
+	 *                               gefunden wurde
+	 */
+	public static function kopfWettbewerb(int $intTurnier): array
+	{
+		if (!$intTurnier)
+		{
+			return array();
+		}
+
+		$objTurnier = Database::getInstance()
+			->prepare("SELECT title, fromDate, toDate, place, country FROM tl_teamtournament WHERE id=?")
+			->limit(1)
+			->execute($intTurnier);
+
+		if (!$objTurnier->numRows)
+		{
+			return array();
+		}
+
+		// Die Beschriftungen stammen aus der Sprachdatei der Elterntabelle
+		System::loadLanguageFile('tl_teamtournament');
+
+		$strLand = (string) $objTurnier->country;
+
+		if ('' !== $strLand)
+		{
+			// Der Dienst führt die Kürzel groß, gespeichert sind sie klein
+			$arrLaender = System::getContainer()->get('contao.intl.countries')->getCountries();
+			$strLand = $arrLaender[strtoupper($strLand)] ?? $strLand;
+		}
+
+		$arrWerte = array
+		(
+			'title'    => (string) $objTurnier->title,
+			'fromDate' => self::datum($objTurnier->fromDate),
+			'toDate'   => self::datum($objTurnier->toDate),
+			'place'    => (string) $objTurnier->place,
+			'country'  => $strLand,
+		);
+
+		$arrKopf = array();
+
+		foreach ($arrWerte as $strFeld => $strWert)
+		{
+			if ('' === $strWert)
+			{
+				continue;
+			}
+
+			$strBeschriftung = $GLOBALS['TL_LANG']['tl_teamtournament'][$strFeld][0] ?? $strFeld;
+			$arrKopf[$strBeschriftung] = $strWert;
+		}
+
+		return $arrKopf;
+	}
+
 	/**
 	 * Erzeugt das Markup eines Bildes aus dem Dateibaum.
 	 *

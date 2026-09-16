@@ -38,6 +38,48 @@ class HelferTest extends TestCase
 	}
 
 	/**
+	 * Prüft die Anzeigeform der Turnierdaten.
+	 *
+	 * @dataProvider datumProvider
+	 *
+	 * @param mixed  $varWert     Der gespeicherte Wert
+	 * @param string $strErwartet Die erwartete Anzeige
+	 */
+	public function testDatum($varWert, string $strErwartet): void
+	{
+		$this->assertSame($strErwartet, Helfer::datum($varWert));
+	}
+
+	/**
+	 * Liefert die Prüffälle für testDatum().
+	 *
+	 * Abgedeckt sind beide Schreibweisen im Bestand: die verkürzte aus
+	 * tl_teamtournament::putDate() und die mit Nullen aufgefüllte des
+	 * Helper-Bundles.
+	 *
+	 * @return array<string, array{0: mixed, 1: string}>
+	 */
+	public function datumProvider(): array
+	{
+		return array
+		(
+			'vollständig als Zahl'        => array(20260916, '16.09.2026'),
+			'vollständig als String'      => array('20260927', '27.09.2026'),
+			'Monat und Jahr, verkürzt'    => array(202609, '09.2026'),
+			'Monat und Jahr, aufgefüllt'  => array(20260900, '09.2026'),
+			'nur Jahr, verkürzt'          => array(2026, '2026'),
+			'nur Jahr, aufgefüllt'        => array(20260000, '2026'),
+			'nur Jahr, sechsstellig'      => array(202600, '2026'),
+			'leer: 0'                     => array(0, ''),
+			'leer: String 0'              => array('0', ''),
+			'leer: null'                  => array(null, ''),
+			'leer: leerer String'         => array('', ''),
+			'unbekannte Länge bleibt'     => array(12345, '12345'),
+			'keine Zahl bleibt'           => array('irgendwann', 'irgendwann'),
+		);
+	}
+
+	/**
 	 * Prüft, dass ohne hinterlegtes Bild kein Markup entsteht.
 	 *
 	 * Der Fall wird abgefangen, bevor der Bilderdienst überhaupt geholt wird —

@@ -15,6 +15,7 @@ use Contao\Database;
 use Contao\DC_Table;
 use Contao\Input;
 use Contao\Message;
+use Schachbulle\ContaoTeamtournamentBundle\Classes\Helfer;
 use Schachbulle\ContaoTeamtournamentBundle\Classes\Wertung;
 
 /*
@@ -32,7 +33,6 @@ $GLOBALS['TL_DCA']['tl_teamtournament_matches'] = array
 		'enableVersioning'            => true,
 		'onload_callback'             => array
 		(
-			array('tl_teamtournament_matches', 'loadTeams'),
 			array('tl_teamtournament_matches', 'sperreErgebnisfelder')
 		),
 		// Läuft nach dem Schreiben und vor Versions::create(); hier ist der
@@ -63,6 +63,8 @@ $GLOBALS['TL_DCA']['tl_teamtournament_matches'] = array
 			// Richtung aus dem 'flag' des Feldes ableitet
 			'fields'                  => array('round DESC', 'board ASC'),
 			'headerFields'            => array('title', 'fromDate', 'toDate', 'place', 'country'),
+			// Formatiert die Datumswerte im Kopf, siehe Helfer::kopfWettbewerb()
+			'header_callback'         => array('tl_teamtournament_matches', 'kopfzeile'),
 			'panelLayout'             => 'filter;sort,search,limit',
 			'child_record_callback'   => array('tl_teamtournament_matches', 'listMatches'),
 		),
@@ -319,14 +321,31 @@ $GLOBALS['TL_DCA']['tl_teamtournament_matches'] = array
 class tl_teamtournament_matches extends Backend
 {
 	/**
-	 * Die Mannschaften des gerade bearbeiteten Turniers.
+	 * Die Mannschaften des Turniers für die Auswahlliste der Eingabemaske.
 	 *
-	 * Kennung => Name. Wird einmal je Aufruf gefüllt, damit die Listenansicht
-	 * nicht je Zeile eine Abfrage auslöst.
+	 * Kennung => Name. Wird beim ersten Aufruf von getTeams() gefüllt.
 	 *
 	 * @var array<int, string>
 	 */
 	private $teams = array();
+
+	/**
+	 * Zwischenspeicher der Mannschaftsnamen für die Listenansicht.
+	 *
+	 * Kennung => Name, oder null für eine Kennung, zu der es keinen Datensatz
+	 * gibt. Getrennt von $teams, weil die Liste über den Primärschlüssel
+	 * auflöst und nicht über das Turnier aus der Adresse.
+	 *
+	 * @var array<int, string|null>
+	 */
+	private $namen = array();
+
+	/**
+	 * Wettbewerbe, deren Mannschaften schon in $namen stehen.
+	 *
+	 * @var array<int, bool>
+	 */
+	private $geladeneTurniere = array();
 
 	/**
 	 * Erzeugt die Rückrufklasse.
@@ -341,18 +360,27 @@ class tl_teamtournament_matches extends Backend
 	}
 
 	/**
-	 * Lädt die Mannschaften des Turniers für die Listenansicht.
+	 * Baut den Kopfbereich über der Wettkampfliste.
 	 *
-	 * Läuft als onload_callback, also im Konstruktor von DC_Table und damit
-	 * bevor ein Datensatz feststeht. Deshalb wird die Turnierkennung hier aus
-	 * der Adresse gelesen — in der Übersicht der Wettkämpfe steht dort die
-	 * Kennung des Turniers.
+	 * Contao gibt Beginn und Ende dort roh aus („20260916"), weil die Felder
+	 * Zahlen in der Form JJJJMMTT sind und keine rgxp 'date' tragen. Der Kopf
+	 * kommt deshalb aus Helfer::kopfWettbewerb(), das auch die Mannschaftsliste
+	 * benutzt — beide Kindlisten eines Wettbewerbs sehen damit gleich aus.
 	 *
-	 * @param DataContainer|null $dc Der aufrufende Data Container
+	 * Die Kennung des Wettbewerbs liefert $dc->currentPid. Das ist in beiden
+	 * Contao-Fassungen genau der Wert, mit dem Contao den Elterndatensatz für
+	 * den Kopf selbst lädt (4.13: CURRENT_ID, 5.7: intCurrentPid).
+	 *
+	 * @param array<string, string> $arrKopf Der von Contao vorbereitete Kopf,
+	 *                                       Beschriftung => Wert
+	 * @param DataContainer         $dc      Der Data Container der Kindliste
+	 *
+	 * @return array<string, string> Der neu gebaute Kopf; lässt sich der
+	 *                               Wettbewerb nicht laden, Contaos eigener
 	 */
-	public function loadTeams($dc = null): void
+	public function kopfzeile($arrKopf, $dc): array
 	{
-		$this->teams = $this->ladeMannschaften($this->getTurnierId($dc));
+		return Helfer::kopfWettbewerb((int) $dc->currentPid) ?: (array) $arrKopf;
 	}
 
 	/**
@@ -366,7 +394,7 @@ class tl_teamtournament_matches extends Backend
 	public function listMatches($arrRow): string
 	{
 		$temp = '<div class="tl_content_left">';
-		$temp .= $arrRow['round'].'.'.$arrRow['board'].' | '.($this->teams[$arrRow['team1']] ?? '?').' - '.($this->teams[$arrRow['team2']] ?? '?');
+		$temp .= $arrRow['round'].'.'.$arrRow['board'].' | '.$this->getMannschaftsname($arrRow['team1'], (int) $arrRow['pid']).' - '.$this->getMannschaftsname($arrRow['team2'], (int) $arrRow['pid']);
 
 		// Geprüft wurde hier früher nur "if ($arrRow['resultTeam1'])". Ein
 		// Wettkampf, der 0:4 ausgegangen ist, hat dort aber eine Null stehen —
@@ -403,12 +431,67 @@ class tl_teamtournament_matches extends Backend
 	}
 
 	/**
+	 * Liefert den Namen einer Mannschaft für die Listenansicht.
+	 *
+	 * Aufgelöst wird über den Primärschlüssel, nicht über eine Liste, die
+	 * vorab für „das" Turnier der Seite geladen wurde. Genau daran hing der
+	 * Fehler „? - ?": Die Liste kam aus getTurnierId(), und die hielt in der
+	 * Übersicht die Kennung des Wettbewerbs für die eines Wettkampfes (siehe
+	 * dort).
+	 *
+	 * Damit die Liste nicht je Zeile zwei Abfragen auslöst, werden beim ersten
+	 * Zugriff alle Mannschaften des Wettbewerbs geladen, zu dem die Zeile
+	 * selbst gehört ($arrRow['pid']). Fehlt eine Kennung darin — etwa weil die
+	 * Mannschaft nachträglich einem anderen Wettbewerb zugeordnet wurde —, wird
+	 * sie einzeln nachgeschlagen.
+	 *
+	 * @param mixed $varId      Kennung aus team1 oder team2
+	 * @param int   $intTurnier Kennung des Wettbewerbs, zu dem der Wettkampf gehört
+	 *
+	 * @return string Der Mannschaftsname; gibt es keinen Datensatz zu der
+	 *                Kennung, die Kennung selbst — nie nur ein Fragezeichen
+	 */
+	private function getMannschaftsname($varId, int $intTurnier): string
+	{
+		$intId = (int) $varId;
+
+		if ($intTurnier && !isset($this->geladeneTurniere[$intTurnier]))
+		{
+			$this->geladeneTurniere[$intTurnier] = true;
+			$this->namen += $this->ladeMannschaften($intTurnier);
+		}
+
+		if (!\array_key_exists($intId, $this->namen))
+		{
+			$objMannschaft = Database::getInstance()
+				->prepare("SELECT name FROM tl_teamtournament_teams WHERE id=?")
+				->limit(1)
+				->execute($intId);
+
+			$this->namen[$intId] = $objMannschaft->numRows ? (string) $objMannschaft->name : null;
+		}
+
+		return $this->namen[$intId] ?? (string) $varId;
+	}
+
+	/**
 	 * Ermittelt, zu welchem Turnier der aktuelle Aufruf gehört.
 	 *
 	 * Früher las das allein Input::get('id') — das stimmt aber nur in der
 	 * Übersicht. Beim Bearbeiten eines Wettkampfes steht dort dessen eigene
 	 * Kennung, und die Mannschaftsliste blieb leer oder zeigte die falschen
 	 * Mannschaften.
+	 *
+	 * Vorsicht mit $dc->id: DC_Table setzt die Eigenschaft im Konstruktor
+	 * schlicht auf Input::get('id') (4.13 Zeile 116). In der Übersicht ist das
+	 * die Kennung des **Wettbewerbs**, erst beim Bearbeiten die eines
+	 * Wettkampfes. Bis 0.4.1 wurde $dc->id hier ohne Rücksicht darauf als
+	 * Wettkampf nachgeschlagen: In der Übersicht von Wettbewerb 6 lud das den
+	 * Wettkampf mit der Kennung 6, dessen pid auf einen ganz anderen
+	 * Wettbewerb zeigen kann — und damit dessen Mannschaften. Gab es keinen
+	 * Wettkampf mit dieser Kennung, fiel die Abfrage durch und das Ergebnis
+	 * stimmte zufällig. Deshalb gilt $dc->id nur noch dann als Wettkampf, wenn
+	 * eine Aktion läuft.
 	 *
 	 * $dc->activeRecord wird bewusst nicht benutzt: Im onload_callback ist es
 	 * unter Contao 4.13 noch nicht gesetzt, und ab Contao 5 gilt der Zugriff
@@ -420,8 +503,10 @@ class tl_teamtournament_matches extends Backend
 	 */
 	private function getTurnierId($dc = null): int
 	{
-		// Beim Bearbeiten eines Wettkampfes: Turnier über den Datensatz
-		if (null !== $dc && $dc->id)
+		// Beim Bearbeiten eines Wettkampfes: Turnier über den Datensatz. Ohne
+		// Aktion und in der Auswahlansicht (act=select) ist $dc->id der
+		// Wettbewerb selbst, beim Anlegen steht der Wettbewerb in pid.
+		if (null !== $dc && $dc->id && !\in_array((string) Input::get('act'), array('', 'select', 'create'), true))
 		{
 			$objWettkampf = Database::getInstance()
 				->prepare("SELECT pid FROM tl_teamtournament_matches WHERE id=?")
@@ -439,8 +524,9 @@ class tl_teamtournament_matches extends Backend
 			return (int) Input::get('pid');
 		}
 
-		// In der Übersicht ist die Kennung in der Adresse das Turnier
-		if (!Input::get('act') && Input::get('id'))
+		// In der Übersicht und in der Auswahlansicht ist die Kennung in der
+		// Adresse das Turnier
+		if (\in_array((string) Input::get('act'), array('', 'select'), true) && Input::get('id'))
 		{
 			return (int) Input::get('id');
 		}

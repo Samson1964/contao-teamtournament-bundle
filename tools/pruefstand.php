@@ -194,6 +194,24 @@ pruefe('Klasse tl_teamtournament_matches vorhanden', class_exists('tl_teamtourna
 pruefe('Klasse tl_teamtournament_games vorhanden', class_exists('tl_teamtournament_games', false), $fehler);
 pruefe('Klasse tl_content_teamtournament vorhanden', class_exists('tl_content_teamtournament', false), $fehler);
 
+// Kopf der beiden Kindlisten eines Wettbewerbs: Rückruf registriert und
+// vorhanden, dieselben Kopffelder in beiden Listen
+foreach (array('tl_teamtournament_teams', 'tl_teamtournament_matches') as $tabelle)
+{
+	$cb = $GLOBALS['TL_DCA'][$tabelle]['list']['sorting']['header_callback'] ?? null;
+	pruefe($tabelle.': header_callback registriert und vorhanden', is_array($cb) && method_exists($cb[0], $cb[1]), $fehler);
+}
+
+pruefe(
+	'Mannschafts- und Wettkampfliste mit gleichen Kopffeldern',
+	$GLOBALS['TL_DCA']['tl_teamtournament_teams']['list']['sorting']['headerFields'] === $GLOBALS['TL_DCA']['tl_teamtournament_matches']['list']['sorting']['headerFields'],
+	$fehler
+);
+
+pruefe('Helfer::datum(20260916) == 16.09.2026', '16.09.2026' === Schachbulle\ContaoTeamtournamentBundle\Classes\Helfer::datum(20260916), $fehler);
+pruefe('Helfer::datum(20260900) == 09.2026', '09.2026' === Schachbulle\ContaoTeamtournamentBundle\Classes\Helfer::datum(20260900), $fehler);
+pruefe('Helfer::datum(0) == leer', '' === Schachbulle\ContaoTeamtournamentBundle\Classes\Helfer::datum(0), $fehler);
+
 // 6. Die Inhaltselemente laden (prueft "extends Contao\ContentElement")
 echo "\nInhaltselemente\n";
 

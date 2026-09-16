@@ -1,5 +1,32 @@
 # Mannschaftsturniere-Bundle Changelog
 
+## Version 0.4.2 (2026-09-16)
+
+Nur das Backend, keine Änderung an der Datenbank.
+
+* Fix: In der Wettkampfliste stand ab Wettbewerb 6 und bei allen neu angelegten Wettbewerben
+  „? - ?" statt der Mannschaftsnamen, immer für beide Mannschaften zugleich. Ursache war
+  `getTurnierId()`: Es schlug `$dc->id` als Kennung eines Wettkampfes nach. In der Übersicht
+  ist `$dc->id` aber die Kennung des Wettbewerbs — `DC_Table` setzt die Eigenschaft im
+  Konstruktor schlicht auf `Input::get('id')`. Für Wettbewerb 6 wurde also der Wettkampf mit
+  der Kennung 6 geladen und dessen Wettbewerb genommen, meist ein ganz anderer; dessen
+  Mannschaften kannten die Kennungen nicht. Gab es keinen Wettkampf mit der Kennung des
+  Wettbewerbs, fiel die Abfrage durch und das Ergebnis stimmte zufällig. Eingeschleppt mit
+  0.3.0. `$dc->id` gilt jetzt nur noch als Wettkampf, wenn eine Aktion auf einem Wettkampf
+  läuft; die Liste löst die Namen außerdem über den Primärschlüssel auf und fällt auf die
+  Kennung zurück, statt ein Fragezeichen zu zeigen.
+* Fix: Der Kopf der Wettkampfliste zeigte Beginn und Ende roh („20260916"). Beide Kindlisten
+  eines Wettbewerbs bauen ihren Kopf jetzt über einen `header_callback` und formatieren die
+  Datumswerte wie die Wettbewerbsübersicht — auch unvollständige Angaben (`16.09.2026`,
+  `09.2026`, `2026`), in der verkürzten wie in der mit Nullen aufgefüllten Schreibweise.
+  Leere Werte erzeugen keine Zeile.
+* Change: Die Mannschaftsliste zeigt im Kopf dieselben Angaben wie die Wettkampfliste:
+  Turniername, Beginn, Ende, Ort und Land. Bisher stand dort nur der Turniername.
+* Change: Die Übersicht der Wettbewerbe formatiert das Enddatum über dieselbe Funktion
+  (`Helfer::datum()`) wie die Köpfe, damit beide nicht auseinanderlaufen.
+* Change: Der `onload_callback` `loadTeams` ist entfallen. Er lud die Mannschaftsliste vorab
+  über denselben fehlerhaften Weg; die Eingabemaske lädt sie bei Bedarf selbst.
+
 ## Version 0.4.1 (2026-09-08)
 
 Nur das Backend, keine Änderung an der Datenbank.

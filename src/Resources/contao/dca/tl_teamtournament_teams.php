@@ -17,6 +17,7 @@ use Contao\Image;
 use Contao\StringUtil;
 use Contao\System;
 use Schachbulle\ContaoHelperBundle\Classes\Helper;
+use Schachbulle\ContaoTeamtournamentBundle\Classes\Helfer;
 
 /*
  * Datenbereich tl_teamtournament_teams
@@ -49,7 +50,9 @@ $GLOBALS['TL_DCA']['tl_teamtournament_teams'] = array
 			'mode'                    => DataContainer::MODE_PARENT,
 			'fields'                  => array('name ASC'),
 			'flag'                    => DataContainer::SORT_DESC,
-			'headerFields'            => array('title'),
+			// Derselbe Kopf wie über der Wettkampfliste; beide hängen am Wettbewerb
+			'headerFields'            => array('title', 'fromDate', 'toDate', 'place', 'country'),
+			'header_callback'         => array('tl_teamtournament_teams', 'kopfzeile'),
 			'panelLayout'             => 'filter;sort;search,limit',
 			'child_record_callback'   => array('tl_teamtournament_teams', 'listTeams'),
 			'disableGrouping'         => true
@@ -357,6 +360,25 @@ class tl_teamtournament_teams extends Backend
 	public function __construct()
 	{
 		parent::__construct();
+	}
+
+	/**
+	 * Baut den Kopfbereich über der Mannschaftsliste.
+	 *
+	 * Gleicher Kopf wie über der Wettkampfliste — Turniername, Beginn, Ende,
+	 * Ort und Land, die Datumswerte lesbar formatiert. Die Einzelheiten stehen
+	 * bei Helfer::kopfWettbewerb() und tl_teamtournament_matches::kopfzeile().
+	 *
+	 * @param array<string, string> $arrKopf Der von Contao vorbereitete Kopf,
+	 *                                       Beschriftung => Wert
+	 * @param DataContainer         $dc      Der Data Container der Kindliste
+	 *
+	 * @return array<string, string> Der neu gebaute Kopf; lässt sich der
+	 *                               Wettbewerb nicht laden, Contaos eigener
+	 */
+	public function kopfzeile($arrKopf, $dc): array
+	{
+		return Helfer::kopfWettbewerb((int) $dc->currentPid) ?: (array) $arrKopf;
 	}
 
 	/**
