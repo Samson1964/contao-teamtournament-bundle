@@ -11,10 +11,11 @@ declare(strict_types=1);
 
 use Contao\Config;
 use Contao\System;
-use Schachbulle\ContaoTeamtournamentBundle\Classes\Ergebnismaske;
 use Schachbulle\ContaoTeamtournamentBundle\ContentElements\Captain;
+use Schachbulle\ContaoTeamtournamentBundle\ContentElements\CrossTable;
 use Schachbulle\ContaoTeamtournamentBundle\ContentElements\LineUp;
 use Schachbulle\ContaoTeamtournamentBundle\ContentElements\Rounds;
+use Schachbulle\ContaoTeamtournamentBundle\ContentElements\Standings;
 
 /*
  * Mitgeliefertes Stylesheet
@@ -39,17 +40,11 @@ if (null !== $objRequest && System::getContainer()->get('contao.routing.scope_ma
 
 /*
  * Backend-Modul
- *
- * Der Eintrag „results" ist eine eigene Aktion des Moduls: Contao ruft die
- * genannte Methode auf, sobald die Adresse „&key=results" enthält, und setzt
- * deren Rückgabe in den Hauptbereich der Backend-Seite. Das funktioniert in
- * Contao 4.13 und Contao 5 gleichermaßen (Backend::getBackendModule()).
  */
 $GLOBALS['BE_MOD']['content']['teamtournament'] = array
 (
-	'tables'  => array('tl_teamtournament', 'tl_teamtournament_teams', 'tl_teamtournament_players', 'tl_teamtournament_matches', 'tl_teamtournament_games'),
-	'results' => array(Ergebnismaske::class, 'maske'),
-	'icon'    => 'bundles/contaoteamtournament/images/icon.png',
+	'tables' => array('tl_teamtournament', 'tl_teamtournament_teams', 'tl_teamtournament_players', 'tl_teamtournament_matches', 'tl_teamtournament_games'),
+	'icon'   => 'bundles/contaoteamtournament/images/icon.png',
 );
 
 /*
@@ -59,6 +54,8 @@ $GLOBALS['BE_MOD']['content']['teamtournament'] = array
  * noch aus (ContentElement::findClass()); die Angabe als ::class statt als
  * Zeichenkette ist nur die ehrlichere Schreibweise.
  */
-$GLOBALS['TL_CTE']['chess']['tt-lineup'] = LineUp::class;
-$GLOBALS['TL_CTE']['chess']['tt-captain'] = Captain::class;
-$GLOBALS['TL_CTE']['chess']['tt-round'] = Rounds::class;
+$GLOBALS['TL_CTE']['teamtournament']['tt-lineup'] = LineUp::class;
+$GLOBALS['TL_CTE']['teamtournament']['tt-captain'] = Captain::class;
+$GLOBALS['TL_CTE']['teamtournament']['tt-round'] = Rounds::class;
+$GLOBALS['TL_CTE']['teamtournament']['tt-standings'] = Standings::class;
+$GLOBALS['TL_CTE']['teamtournament']['tt-crosstable'] = CrossTable::class;

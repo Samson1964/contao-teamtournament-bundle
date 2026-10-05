@@ -98,13 +98,20 @@ class Captain extends ContentElement
 			}
 
 			// Foto: eigenes Bild des Kapitäns, sonst das Standardbild aus den
-			// Einstellungen, passend zum Geschlecht des Turniers
-			$bild_id = $objMannschaft->singleSRC ?: Helfer::standardbild($objTurnier->gender);
-
+			// Einstellungen, passend zum Geschlecht des Turniers. Am Turnier
+			// lassen sich die Bilder ganz abschalten; dann bleibt auch das
+			// Standardbild weg.
+			//
 			// Die Lightbox-Gruppe hieß hier früher 'tt'.$objSpieler->id — eine
 			// Variable, die es in dieser Klasse gar nicht gibt. Richtig ist die
 			// Kennung der Mannschaft.
-			$bild = Helfer::bild($bild_id, $objTurnier->imageSize_lineup, 'tt'.$objMannschaft->id);
+			$bild = '';
+
+			if (!$objTurnier->hideImages_lineup)
+			{
+				$bild_id = $objMannschaft->singleSRC ?: Helfer::standardbild($objTurnier->gender);
+				$bild = Helfer::bild($bild_id, $objTurnier->imageSize_lineup, 'tt'.$objMannschaft->id);
+			}
 
 			$content .= '<tr>';
 			$content .= '<td>'.$bild.'</td>';

@@ -24,6 +24,10 @@ $GLOBALS['TL_DCA']['tl_content']['palettes']['tt-lineup'] = '{type_legend},type,
 $GLOBALS['TL_DCA']['tl_content']['palettes']['tt-captain'] = '{type_legend},type,headline;{tt-captain_legend},teamtournament_lineup;{template_legend:hide},customTpl;{protected_legend:hide},protected;{expert_legend:hide},cssID;{invisible_legend:hide},invisible,start,stop';
 $GLOBALS['TL_DCA']['tl_content']['palettes']['tt-round'] = '{type_legend},type,headline;{tt-pairings_legend},teamtournament_turnier,teamtournament_runde;{template_legend:hide},customTpl;{protected_legend:hide},protected;{expert_legend:hide},cssID;{invisible_legend:hide},invisible,start,stop';
 
+// Tabelle und Kreuztabelle brauchen nur das Turnier; gerechnet wird daraus
+$GLOBALS['TL_DCA']['tl_content']['palettes']['tt-standings'] = '{type_legend},type,headline;{tt-table_legend},teamtournament_turnier;{template_legend:hide},customTpl;{protected_legend:hide},protected;{expert_legend:hide},cssID;{invisible_legend:hide},invisible,start,stop';
+$GLOBALS['TL_DCA']['tl_content']['palettes']['tt-crosstable'] = '{type_legend},type,headline;{tt-table_legend},teamtournament_turnier;{template_legend:hide},customTpl;{protected_legend:hide},protected;{expert_legend:hide},cssID;{invisible_legend:hide},invisible,start,stop';
+
 /*
  * Felder
  */

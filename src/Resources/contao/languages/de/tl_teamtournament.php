@@ -35,8 +35,11 @@ $GLOBALS['TL_LANG']['tl_teamtournament']['published'] = array('Veröffentlicht',
 
 $GLOBALS['TL_LANG']['tl_teamtournament']['imageSize_legend'] = 'Bildgrößen';
 $GLOBALS['TL_LANG']['tl_teamtournament']['imageSize_flags'] = array('Bildgröße Mannschaften', 'Bildgröße für Mannschaften, z.B. in Paarungslisten');
+$GLOBALS['TL_LANG']['tl_teamtournament']['hideImages_flags'] = array('Mannschaftsbilder ausblenden', 'Die Logos und Flaggen der Mannschaften erscheinen dann nicht im Frontend.');
 $GLOBALS['TL_LANG']['tl_teamtournament']['imageSize_lineup'] = array('Bildgröße Aufstellungen', 'Bildgröße in der Tabelle mit der Aufstellung');
+$GLOBALS['TL_LANG']['tl_teamtournament']['hideImages_lineup'] = array('Bilder in Aufstellung und Mannschaftsführer ausblenden', 'Die Fotos der Spieler und des Kapitäns erscheinen dann nicht im Frontend; auch das Standardbild aus den Einstellungen bleibt weg.');
 $GLOBALS['TL_LANG']['tl_teamtournament']['imageSize_results'] = array('Bildgröße Ergebnisse', 'Bildgröße in der Tabelle mit den Ergebnissen');
+$GLOBALS['TL_LANG']['tl_teamtournament']['hideImages_results'] = array('Bilder in der Rundenübersicht ausblenden', 'Die Fotos der Spieler erscheinen dann nicht in der Rundenübersicht; auch das Standardbild aus den Einstellungen bleibt weg.');
 
 $GLOBALS['TL_LANG']['tl_teamtournament']['info_legend'] = 'Information';
 $GLOBALS['TL_LANG']['tl_teamtournament']['info'] = array('Information', 'Anmerkungen zum Wettbewerb');

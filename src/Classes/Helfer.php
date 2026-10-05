@@ -15,6 +15,7 @@ use Contao\Config;
 use Contao\Database;
 use Contao\StringUtil;
 use Contao\System;
+use Schachbulle\ContaoFlaggenBundle\Classes\Flaggen;
 
 /**
  * Gemeinsame Hilfsfunktionen für Inhaltselemente und Backend.
@@ -28,6 +29,11 @@ use Contao\System;
  */
 class Helfer
 {
+	/**
+	 * Öffentlicher Pfad der Flaggensymbole (schachbulle/contao-flaggen-bundle).
+	 */
+	public const FLAGGENPFAD = 'bundles/contaoflaggen/flags/';
+
 	/**
 	 * Formatiert ein gespeichertes Turnierdatum für die Anzeige.
 	 *
@@ -99,6 +105,118 @@ class Helfer
 		}
 
 		return $strTag.'.'.$strMonat.'.'.$strJahr;
+	}
+
+	/**
+	 * Gibt das Land als Flaggensymbol mit dem Landesnamen als Tooltip aus.
+	 *
+	 * Die Symbole stammen aus dem Bundle schachbulle/contao-flaggen-bundle.
+	 * Dessen eigene Methode getFlagge() wird bewusst nicht benutzt: Sie
+	 * erwartet dreistellige Kürzel, und zwar in der Schreibweise der
+	 * Schachverbände ('GER'), während Contao das Land zweistellig nach ISO
+	 * ablegt ('de'). Eine Umrechnung über symfony/intl liefert dagegen 'DEU'
+	 * und findet die deutsche Flagge nicht.
+	 *
+	 * Die Dateinamen des Bundles sind aber genau die zweistelligen Kürzel.
+	 * Deshalb wird die Datei unmittelbar angesprochen und der Name aus Contaos
+	 * Länderdienst geholt — der ihn in der Sprache des Backends liefert.
+	 *
+	 * Gibt es zu einem Land kein Symbol oder fehlt das Flaggen-Bundle, erscheint
+	 * der ausgeschriebene Landesname. Die Spalte bleibt so in jedem Fall lesbar.
+	 *
+	 * @param string|null $strLand   Länderkürzel aus der Datenbank, zweistellig
+	 * @param int         $intBreite Breite der Flagge in Bildpunkten
+	 *
+	 * @return string Das Markup der Flagge, sonst der Landesname oder — wenn
+	 *                auch der unbekannt ist — das Kürzel; leer ohne Land
+	 */
+	public static function flagge(?string $strLand, int $intBreite = 20): string
+	{
+		$strKuerzel = strtolower(trim((string) $strLand));
+
+		if ('' === $strKuerzel)
+		{
+			return '';
+		}
+
+		$strName = self::landesname(strtoupper($strKuerzel));
+
+		if (null === self::flaggendatei($strKuerzel))
+		{
+			return $strName;
+		}
+
+		return sprintf(
+			'<img src="%s%s.svg" width="%d" alt="%s" title="%s">',
+			self::FLAGGENPFAD,
+			$strKuerzel,
+			$intBreite,
+			StringUtil::specialchars($strName),
+			StringUtil::specialchars($strName)
+		);
+	}
+
+	/**
+	 * Sucht die Flaggendatei eines Landes im Flaggen-Bundle.
+	 *
+	 * Gesucht wird im Paketverzeichnis, nicht unter public/: Ob Contao die
+	 * Bundle-Dateien nach web/ oder public/ verknüpft hat, ist von der
+	 * Installation abhängig, das Paketverzeichnis findet sich dagegen immer
+	 * über die Klasse selbst.
+	 *
+	 * @param string $strKuerzel Länderkürzel, zweistellig und klein
+	 *
+	 * @return string|null Der Pfad der SVG-Datei, oder null, wenn das Bundle
+	 *                     fehlt oder zu diesem Land kein Symbol mitbringt
+	 */
+	private static function flaggendatei(string $strKuerzel): ?string
+	{
+		if (!class_exists(Flaggen::class) || !preg_match('/^[a-z]{2}$/', $strKuerzel))
+		{
+			return null;
+		}
+
+		try
+		{
+			$strKlasse = (new \ReflectionClass(Flaggen::class))->getFileName();
+		}
+		catch (\ReflectionException $e)
+		{
+			return null;
+		}
+
+		$strPfad = \dirname((string) $strKlasse).'/../Resources/public/flags/'.$strKuerzel.'.svg';
+
+		return is_file($strPfad) ? $strPfad : null;
+	}
+
+	/**
+	 * Liefert den ausgeschriebenen Namen eines Landes.
+	 *
+	 * @param string $strKuerzel Länderkürzel, zweistellig und groß
+	 *
+	 * @return string Der Name in der Sprache des Backends; das Kürzel, wenn das
+	 *                Land unbekannt ist oder der Dienst nicht bereitsteht (etwa
+	 *                in einem Prüfstand ohne Contao-Behälter)
+	 */
+	public static function landesname(string $strKuerzel): string
+	{
+		// class_exists(), damit die Methode auch in Unit-Tests ohne Contao läuft
+		if (!class_exists(System::class))
+		{
+			return $strKuerzel;
+		}
+
+		$objContainer = System::getContainer();
+
+		if (null === $objContainer || !$objContainer->has('contao.intl.countries'))
+		{
+			return $strKuerzel;
+		}
+
+		$arrLaender = $objContainer->get('contao.intl.countries')->getCountries();
+
+		return $arrLaender[$strKuerzel] ?? $strKuerzel;
 	}
 
 	/**

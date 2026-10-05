@@ -112,9 +112,16 @@ class LineUp extends ContentElement
 			}
 
 			// Foto: eigenes Bild des Spielers, sonst das Standardbild aus den
-			// Einstellungen, passend zum Geschlecht des Turniers
-			$bild_id = $objSpieler->singleSRC ?: Helfer::standardbild($objTurnier->gender);
-			$bild = Helfer::bild($bild_id, $objTurnier->imageSize_lineup, 'tt'.$objSpieler->id);
+			// Einstellungen, passend zum Geschlecht des Turniers. Am Turnier
+			// lassen sich die Bilder ganz abschalten; dann bleibt auch das
+			// Standardbild weg.
+			$bild = '';
+
+			if (!$objTurnier->hideImages_lineup)
+			{
+				$bild_id = $objSpieler->singleSRC ?: Helfer::standardbild($objTurnier->gender);
+				$bild = Helfer::bild($bild_id, $objTurnier->imageSize_lineup, 'tt'.$objSpieler->id);
+			}
 
 			$content .= '<tr>';
 			$content .= '<td>'.$bild.'</td>';

@@ -141,7 +141,7 @@ class Wertung
 	 * unangetastet.
 	 *
 	 * Aufgerufen wird die Methode aus den onsubmit_callbacks von Wettkampf und
-	 * Partie sowie aus der Ergebnismaske, also immer **nach** dem Schreiben des
+	 * Partie, also immer **nach** dem Schreiben des
 	 * auslösenden Datensatzes. Im save_callback wäre sie falsch aufgehoben: Dort
 	 * würde Contao 5 das eigene UPDATE hinterher wieder überschreiben.
 	 *

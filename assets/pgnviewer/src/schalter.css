@@ -1,0 +1,51 @@
+/*
+ * PGN-Viewer der Mannschaftsturniere — Schalter „Partie nachspielen"
+ *
+ * Wird schon beim Seitenaufruf geladen, aber nur, wenn die Seite mindestens
+ * eine Partie mit PGN enthält. Deshalb nur das Nötigste: der Schalter und die
+ * Zeile, die den Viewer aufnimmt. Alles Weitere steht in tt-pgnviewer.css.
+ */
+
+.tt-pgn-schalter {
+    display: block;
+    margin: 0.3rem auto 0;
+    min-height: 44px;
+    padding: 0.2rem 0.6rem;
+    border: 1px solid #1f4e8c;
+    border-radius: 4px;
+    background: #fff;
+    color: #1f4e8c;
+    font-size: 0.8rem;
+    font-weight: normal;
+    line-height: 1.2;
+    white-space: normal;
+    cursor: pointer;
+}
+
+.tt-pgn-schalter:hover {
+    background: #1f4e8c;
+    color: #fff;
+}
+
+.tt-pgn-schalter:focus-visible {
+    outline: 3px solid #1f4e8c;
+    outline-offset: 2px;
+}
+
+.tt-pgn-schalter[aria-expanded="true"] {
+    background: #1f4e8c;
+    color: #fff;
+}
+
+.tt-pgn-schalter[hidden],
+.tt-pgn-zeile[hidden] {
+    display: none !important;
+}
+
+.tt-pgn-zeile > td {
+    padding: 0;
+}
+
+.tt-pgn-meldung {
+    margin: 0.5rem 0;
+}

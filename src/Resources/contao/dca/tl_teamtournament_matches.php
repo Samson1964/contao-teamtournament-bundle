@@ -16,6 +16,7 @@ use Contao\DC_Table;
 use Contao\Input;
 use Contao\Message;
 use Schachbulle\ContaoTeamtournamentBundle\Classes\Helfer;
+use Schachbulle\ContaoTeamtournamentBundle\Classes\Rueckweg;
 use Schachbulle\ContaoTeamtournamentBundle\Classes\Wertung;
 
 /*
@@ -33,7 +34,9 @@ $GLOBALS['TL_DCA']['tl_teamtournament_matches'] = array
 		'enableVersioning'            => true,
 		'onload_callback'             => array
 		(
-			array('tl_teamtournament_matches', 'sperreErgebnisfelder')
+			array('tl_teamtournament_matches', 'sperreErgebnisfelder'),
+			// Legt den Rückweg des Zurück-Knopfes fest, siehe Classes\Rueckweg
+			array(Rueckweg::class, 'merken')
 		),
 		// Läuft nach dem Schreiben und vor Versions::create(); hier ist der
 		// richtige Ort für das eigene UPDATE des gerechneten Ergebnisses
@@ -85,15 +88,6 @@ $GLOBALS['TL_DCA']['tl_teamtournament_matches'] = array
 				'label'               => &$GLOBALS['TL_LANG']['tl_teamtournament_matches']['edit'],
 				'href'                => 'table=tl_teamtournament_games',
 				'icon'                => 'edit.svg'
-			),
-			// Eigene Maske für Aufstellung und Ergebnisse, siehe
-			// Classes\Ergebnismaske. Der Schlüssel "results" ist im
-			// Backend-Modul hinterlegt (config.php)
-			'results' => array
-			(
-				'label'               => &$GLOBALS['TL_LANG']['tl_teamtournament_matches']['results'],
-				'href'                => 'key=results',
-				'icon'                => 'bundles/contaoteamtournament/images/players.png',
 			),
 			'editHeader' => array
 			(

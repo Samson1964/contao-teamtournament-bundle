@@ -1,0 +1,19 @@
+{
+    "name": "tt-pgnviewer",
+    "private": true,
+    "description": "Quellen und Build des PGN-Viewers der Mannschaftsturniere. Das Ergebnis landet in src/Resources/public/pgnviewer/.",
+    "license": "LGPL-3.0-or-later",
+    "type": "module",
+    "scripts": {
+        "build": "node build.mjs",
+        "test": "node --test \"test/*.test.js\""
+    },
+    "dependencies": {
+        "@mliebelt/pgn-parser": "1.4.19",
+        "chess.js": "1.4.0",
+        "cm-chessboard": "8.14.0"
+    },
+    "devDependencies": {
+        "esbuild": "0.25.10"
+    }
+}

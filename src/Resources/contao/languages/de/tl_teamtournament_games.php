@@ -16,8 +16,8 @@ $GLOBALS['TL_LANG']['tl_teamtournament_games']['board'] = array('Brett', 'Nummer
 $GLOBALS['TL_LANG']['tl_teamtournament_games']['colors'] = array('Farbe des 1. Spielers', '1. Spieler hat die eingestellte Farbe');
 $GLOBALS['TL_LANG']['tl_teamtournament_games']['result'] = array('Ergebnis', 'Ergebnis aus Sicht des 1. Spielers');
 
-$GLOBALS['TL_LANG']['tl_teamtournament_games']['pgn_legend'] = 'Paarung';
-$GLOBALS['TL_LANG']['tl_teamtournament_games']['pgn'] = array('PGN', 'PGN-Daten');
+$GLOBALS['TL_LANG']['tl_teamtournament_games']['pgn_legend'] = 'Partie nachspielen';
+$GLOBALS['TL_LANG']['tl_teamtournament_games']['pgn'] = array('PGN', 'Die Partie im PGN-Format. Ist das Feld gefüllt, erscheint in der Rundenübersicht der Schalter „Partie nachspielen" (nicht bei kampflosen Ergebnissen). Mehrere Partien sind möglich, etwa mit Stichkampf; sie stehen im Viewer zur Auswahl. Namen, Elo, Farben und Ergebnis kommen aus diesem Datensatz, nicht aus den PGN-Tags.');
 
 $GLOBALS['TL_LANG']['tl_teamtournament_games']['publish_legend'] = 'Veröffentlichung';
 $GLOBALS['TL_LANG']['tl_teamtournament_games']['published'] = array('Veröffentlicht', 'Paarung veröffentlicht');

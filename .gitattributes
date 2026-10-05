@@ -3,4 +3,7 @@ package-metadata.yml export-ignore
 phpunit.xml.dist export-ignore
 tests export-ignore
 tools export-ignore
+# Quellen und Build des PGN-Viewers; ausgeliefert werden nur die gebauten
+# Dateien unter src/Resources/public/pgnviewer/
+assets export-ignore
 .gitattributes export-ignore

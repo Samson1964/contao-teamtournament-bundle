@@ -13,6 +13,7 @@ use Contao\Backend;
 use Contao\DataContainer;
 use Contao\Database;
 use Contao\DC_Table;
+use Schachbulle\ContaoTeamtournamentBundle\Classes\Rueckweg;
 use Contao\Input;
 use Schachbulle\ContaoTeamtournamentBundle\Classes\Wertung;
 
@@ -27,6 +28,11 @@ $GLOBALS['TL_DCA']['tl_teamtournament_games'] = array
 		'dataContainer'               => DC_Table::class,
 		'ptable'                      => 'tl_teamtournament_matches',
 		'switchToEdit'                => true,
+		// Legt den Rückweg des Zurück-Knopfes fest, siehe Classes\Rueckweg
+		'onload_callback'             => array
+		(
+			array(Rueckweg::class, 'merken')
+		),
 		'enableVersioning'            => true,
 		// Jede Änderung an einem Brett kann das Mannschaftsergebnis verschieben
 		'onsubmit_callback'           => array
@@ -225,8 +231,13 @@ $GLOBALS['TL_DCA']['tl_teamtournament_games'] = array
 			'exclude'                 => true,
 			'search'                  => true,
 			'inputType'               => 'textarea',
-			'eval'                    => array('tl_class'=>'clr'),
-			'explanation'             => 'insertTags',
+			// PGN ist kein HTML. decodeEntities speichert Anführungszeichen als
+			// Zeichen statt als &quot; — sonst liest kein PGN-Parser die Tags.
+			// preserveTags verhindert, dass Contao Text in spitzen Klammern
+			// entfernt, etwa „<" in einem Kommentar. Ausgegeben wird das Feld
+			// nur als maskiertes JSON (Classes\Partiedaten::json()).
+			// Der frühere Eintrag 'explanation' => 'insertTags' war ein Kopierrest.
+			'eval'                    => array('tl_class'=>'clr', 'decodeEntities'=>true, 'preserveTags'=>true, 'class'=>'monospace'),
 			'sql'                     => 'text NULL'
 		),
 		'published' => array

@@ -134,7 +134,7 @@ $GLOBALS['TL_DCA']['tl_teamtournament'] = array
 	// Paletten
 	'palettes' => array
 	(
-		'default'                     => '{title_legend},title,gender;{place_legend},place,country;{date_legend},fromDate,toDate;{language_legend},language;{results_legend},calculateResults;{info_legend:hide},info,source;{options_legend:hide},singleSRC,url;{imageSize_legend:hide},imageSize_flags,imageSize_lineup,imageSize_results;{publish_legend},complete,published'
+		'default'                     => '{title_legend},title,gender;{place_legend},place,country;{date_legend},fromDate,toDate;{language_legend},language;{results_legend},calculateResults;{info_legend:hide},info,source;{options_legend:hide},singleSRC,url;{imageSize_legend:hide},imageSize_flags,hideImages_flags,imageSize_lineup,hideImages_lineup,imageSize_results,hideImages_results;{publish_legend},complete,published'
 	),
 
 	// Felder
@@ -347,6 +347,14 @@ $GLOBALS['TL_DCA']['tl_teamtournament'] = array
 			'inputType'               => 'checkbox',
 			'sql'                     => "char(1) NOT NULL default ''"
 		),
+		'hideImages_flags' => array
+		(
+			'label'                   => &$GLOBALS['TL_LANG']['tl_teamtournament']['hideImages_flags'],
+			'exclude'                 => true,
+			'inputType'               => 'checkbox',
+			'eval'                    => array('tl_class'=>'w50 m12'),
+			'sql'                     => "char(1) NOT NULL default ''"
+		),
 		'imageSize_flags' => array
 		(
 			'label'                   => &$GLOBALS['TL_LANG']['tl_teamtournament']['imageSize_flags'],
@@ -364,6 +372,14 @@ $GLOBALS['TL_DCA']['tl_teamtournament'] = array
 			'options_callback'        => array('tl_teamtournament', 'getBildgroessen'),
 			'sql'                     => "varchar(255) NOT NULL default ''"
 		),
+		'hideImages_lineup' => array
+		(
+			'label'                   => &$GLOBALS['TL_LANG']['tl_teamtournament']['hideImages_lineup'],
+			'exclude'                 => true,
+			'inputType'               => 'checkbox',
+			'eval'                    => array('tl_class'=>'w50 m12'),
+			'sql'                     => "char(1) NOT NULL default ''"
+		),
 		'imageSize_lineup' => array
 		(
 			'label'                   => &$GLOBALS['TL_LANG']['tl_teamtournament']['imageSize_lineup'],
@@ -380,6 +396,14 @@ $GLOBALS['TL_DCA']['tl_teamtournament'] = array
 			),
 			'options_callback'        => array('tl_teamtournament', 'getBildgroessen'),
 			'sql'                     => "varchar(255) NOT NULL default ''"
+		),
+		'hideImages_results' => array
+		(
+			'label'                   => &$GLOBALS['TL_LANG']['tl_teamtournament']['hideImages_results'],
+			'exclude'                 => true,
+			'inputType'               => 'checkbox',
+			'eval'                    => array('tl_class'=>'w50 m12'),
+			'sql'                     => "char(1) NOT NULL default ''"
 		),
 		'imageSize_results' => array
 		(
@@ -664,6 +688,11 @@ class tl_teamtournament extends Backend
 		// der Übersicht und über den Mannschaften/Wettkämpfen gleich aussieht
 		$args[0] = Helfer::datum($row['toDate']);
 		$args[1] = '<b>'.$args[1].'</b>';
+
+		// Das Land als Flagge; den Namen nennt das title-Attribut. Gelesen wird
+		// das Kürzel aus dem Datensatz, weil in $args schon der ausgeschriebene
+		// Name der Auswahlliste steht.
+		$args[3] = Helfer::flagge($row['country']);
 
 		// Controller::generateImage() gibt es in Contao 5 nicht mehr,
 		// Image::getHtml() dagegen in beiden Fassungen

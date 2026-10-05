@@ -13,6 +13,7 @@ use Contao\Backend;
 use Contao\DataContainer;
 use Contao\Database;
 use Contao\DC_Table;
+use Schachbulle\ContaoTeamtournamentBundle\Classes\Rueckweg;
 use Schachbulle\ContaoHelperBundle\Classes\Helper;
 use Schachbulle\ContaoTeamtournamentBundle\Classes\Helfer;
 
@@ -27,6 +28,11 @@ $GLOBALS['TL_DCA']['tl_teamtournament_players'] = array
 		'dataContainer'               => DC_Table::class,
 		'ptable'                      => 'tl_teamtournament_teams',
 		'switchToEdit'                => true,
+		// Legt den Rückweg des Zurück-Knopfes fest, siehe Classes\Rueckweg
+		'onload_callback'             => array
+		(
+			array(Rueckweg::class, 'merken')
+		),
 		'enableVersioning'            => true,
 		// Trägt beim Anlegen die nächste freie Brettnummer ein. Ein 'default'
 		// am Feld reicht dafür nicht: Der Wert hängt von der Mannschaft ab und

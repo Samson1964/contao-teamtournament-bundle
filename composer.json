@@ -20,6 +20,7 @@
         "php": "^7.4 || ^8.0",
         "contao/core-bundle": "^4.13 || ^5.0",
         "menatwork/contao-multicolumnwizard-bundle": "^3.6 || ^4.0",
+        "schachbulle/contao-flaggen-bundle": "^2.0",
         "schachbulle/contao-helper-bundle": "^2.0",
         "symfony/config": "^5.4 || ^6.0 || ^7.0",
         "symfony/dependency-injection": "^5.4 || ^6.0 || ^7.0",

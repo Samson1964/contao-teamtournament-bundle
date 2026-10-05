@@ -1,5 +1,98 @@
 # Mannschaftsturniere-Bundle Changelog
 
+## Version 0.5.0 (2026-10-05)
+
+Die Beschreibung des PGN-Viewers steht in der README unter „Partien nachspielen", Quellen
+und Build in `assets/pgnviewer/README.md`.
+
+**Wichtig beim Aktualisieren:** Die Maske „Aufstellung und Ergebnisse" aus 0.4.0 ist
+entfallen (siehe unten). Neu dazu kommt die Abhängigkeit
+`schachbulle/contao-flaggen-bundle`; über den Contao Manager installiert sie sich von
+selbst mit. Außerdem kommen **drei Datenbankspalten** dazu, es ist also einmal
+`contao:migrate` nötig.
+
+* Add: **Zwei neue Inhaltselemente, Tabelle und Kreuztabelle.** Beide rechnen aus den
+  Brettpunkten der Wettkämpfe: Sieg zwei Mannschaftspunkte, Unentschieden einer, Niederlage
+  keiner; sortiert nach Mannschaftspunkten, dann Brettpunkten, dann Name. Punktgleiche
+  teilen sich den Rang. Gezählt wird nur, was ein Ergebnis hat — ein 0:4 schon, ein noch
+  nicht gespielter Wettkampf nicht. In der Kreuztabelle stehen die Brettpunkte aus Sicht
+  der Zeilenmannschaft; mehrfache Begegnungen stehen untereinander, und bei vielen
+  Mannschaften scrollt die Tabelle in sich, statt das Layout zu sprengen.
+* Add: **Die Bilder lassen sich je Bereich abschalten** — Mannschaftsbilder, Aufstellung
+  samt Mannschaftsführer und Rundenübersicht getrennt, als Schalter neben der jeweiligen
+  Bildgröße am Turnier. Abgeschaltet erscheinen auch die Standardbilder aus den
+  Einstellungen nicht. Die Felder heißen „ausblenden" und nicht „anzeigen", damit
+  bestehende Turniere unverändert weiterlaufen: Eine neue Spalte ist leer, und leer
+  bedeutet so „wie bisher".
+* Change: **Die Gruppe der Inhaltselemente heißt jetzt „Schach-Mannschaftsturnier"** statt
+  „chess". Die Elemente selbst und ihre Typnamen bleiben unverändert; bestehende Seiten
+  sind nicht betroffen.
+
+* Remove: **Die Maske „Aufstellung und Ergebnisse" (`&key=results`) ist entfernt.** Sie war
+  in 0.4.0 als Abkürzung gedacht, passt aber nicht zur Praxis: Sie erzwang die Brettfolge
+  nach Brettnummern, während in manchen Turnieren Brett 5 vor Brett 2 spielt, und sie bot
+  keine Eingabe der PGN-Daten. Erfasst wird wieder ausschließlich über die Liste der
+  Brettpaarungen (`table=tl_teamtournament_games`), wo alle Felder zur Verfügung stehen.
+  Das Errechnen der Mannschaftspunkte aus den Brettpunkten bleibt unverändert.
+* Fix: **Der Zurück-Knopf in den Kindlisten landete manchmal im Dashboard.** Unter
+  Contao 4.13 baut `DC_Table` ihn aus `System::getReferer(true, $ptable)`; diese Methode
+  sucht im Sitzungsspeicher einen Eintrag für die Elterntabelle, dann die zuletzt besuchte
+  Seite — und greift sonst auf `router->generate('contao_backend')` zurück, also aufs
+  Dashboard. Tabellenbezogene Einträge schreibt Contao 4.13 aber gar nicht mehr: Der
+  `StoreRefererListener` kennt nur noch „current" und „last". Der Knopf hing damit daran,
+  welche Seite zufällig vorher offen war. `Classes\Rueckweg` hinterlegt den Eintrag jetzt
+  selbst, sodass er immer zur zugehörigen Liste führt — aus den Spielern zur
+  Mannschaftsliste des Turniers, aus den Brettpaarungen zur Wettkampfliste. Unter Contao 5
+  bleibt die Klasse untätig, weil der Dienst `contao.data_container.dca_url_analyzer` den
+  Weg dort aus der DCA errechnet.
+* Add: **Das Land steht in der Turnierübersicht als Flagge**, der ausgeschriebene Name als
+  Tooltip. Die Symbole kommen aus `schachbulle/contao-flaggen-bundle`. Dessen Methode
+  `getFlagge()` wird dabei nicht benutzt: Sie erwartet die dreistelligen Kürzel der
+  Schachverbände (`GER`), Contao speichert aber zweistellig nach ISO (`de`) — und die
+  Umrechnung über symfony/intl ergibt `DEU`, wozu es keinen Eintrag gibt. Die Dateinamen des
+  Bundles sind dagegen genau die zweistelligen Kürzel. Fehlt zu einem Land das Symbol oder
+  das Bundle, erscheint der Landesname.
+
+* Add: **PGN-Viewer in der Rundenübersicht.** Brettpaarungen mit gefülltem PGN-Feld
+  bekommen in der Ergebnisspalte den Schalter „Partie nachspielen", der unter dem Brett
+  einen Viewer aufklappt: Brett, Zugliste mit Kommentaren, Varianten und NAGs, Navigation
+  per Knopf und Tastatur. Mehrere Partien in einem Feld stehen zur Auswahl. Ohne PGN und bei
+  kampflosen Ergebnissen bleibt die Zeile unverändert.
+* Add: Der Kopf des Viewers — Namen, Titel, Elo, Mannschaften, Ergebnis, Runde, Brett — kommt
+  aus den Datensätzen, nicht aus den PGN-Tags. Die Farben ergeben sich aus der Farbangabe der
+  Brettpaarung; hatte Spieler 1 Schwarz, wird auch das Ergebnis für die Reihenfolge
+  Weiß–Schwarz gedreht.
+* Add: Barrierefreiheit für die Inklusions-Schacholympiade: vollständige Tastaturbedienung
+  mit nur einem Tabstopp in der Zugliste, ausgeschriebene Zugansage in einer
+  aria-live-Region („12. Weiß: Springer schlägt auf f 3, Schach"), Brett zusätzlich als
+  Tabelle und Figurenliste für Bildschirmleser, aktueller Zug fett, invertiert und
+  eingerahmt statt nur farbig, Kontraste mindestens 4,5:1, Knöpfe 44×44 Pixel. Gesperrte
+  Knöpfe tragen `aria-disabled` statt `disabled`, damit der Fokus beim Blättern nicht
+  verloren geht.
+* Add: Fehlerhafte PGN-Daten führen zu einer Meldung statt zu einem JavaScript-Absturz:
+  unlesbares oder abgeschnittenes PGN mit Zeile und Spalte, ein unmöglicher Zug mit dem Zug
+  selbst — die Partie bleibt bis dorthin nachspielbar.
+* Add: Bibliotheken [chess.js](https://github.com/jhlywa/chess.js) 1.4.0 (BSD-2-Clause),
+  [@mliebelt/pgn-parser](https://github.com/mliebelt/pgn-parser) 1.4.19 (Apache-2.0) und
+  [cm-chessboard](https://github.com/shaack/cm-chessboard) 8.14.0 (MIT), lokal im Bundle,
+  ohne CDN; Lizenztexte liegen unter `public/pgnviewer/lizenzen/`. chessground und
+  PgnViewerJS kamen nicht in Frage, beide stehen unter GPL-3.0.
+* Add: Seiten ohne Partie laden nichts vom Viewer. Seiten mit Partie laden einen Lader von
+  1,4 KB (gzip); Brett, Parser und Stylesheet (rund 50 KB gzip) folgen erst beim ersten
+  Öffnen. Jeder Viewer einer Seite läuft unabhängig.
+* Add: `Classes\Partiedaten` erzeugt Schalter, Datenzeile und Lader-Einbindung unabhängig von
+  Contao, damit andere Module den Viewer wiederverwenden können.
+* Change: Das PGN-Feld der Brettpaarungen speichert mit `decodeEntities` und `preserveTags`.
+  Bisher legte Contaos Eingabefilter Anführungszeichen als `&quot;` ab — aus
+  `[White "Müller"]` wurde `[White &quot;Müller&quot;]`, was kein PGN-Parser liest — und
+  entfernte Text in spitzen Klammern. Bestehende Datensätze werden bei der Ausgabe
+  entschlüsselt und müssen nicht neu gespeichert werden. Das Feld zeigt eine
+  nichtproportionale Schrift und eine Feldhilfe; der sinnlose Eintrag
+  `explanation => insertTags` ist entfallen.
+* Change: Das Daten-JSON des Viewers bricht `{{` und Contaos Basis-Entitäten (`[-]`, `[lt]` …)
+  auf, damit weder die Inserttag-Ersetzung noch `restoreBasicEntities()` einen
+  PGN-Kommentar verändert.
+
 ## Version 0.4.2 (2026-09-16)
 
 Nur das Backend, keine Änderung an der Datenbank.

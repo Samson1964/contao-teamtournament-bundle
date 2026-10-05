@@ -30,7 +30,6 @@ $GLOBALS['TL_LANG']['tl_teamtournament_matches']['published'] = array('Veröffen
 $GLOBALS['TL_LANG']['tl_teamtournament_matches']['new'] = array('Neuer Wettkampf', 'Neuen Wettkampf anlegen');
 $GLOBALS['TL_LANG']['tl_teamtournament_matches']['edit'] = array('Bretter des Wettkampfs bearbeiten', 'Bretter des Wettkampfs %s bearbeiten');
 $GLOBALS['TL_LANG']['tl_teamtournament_matches']['editHeader'] = array('Wettkampf bearbeiten', 'Wettkampf %s bearbeiten');
-$GLOBALS['TL_LANG']['tl_teamtournament_matches']['results'] = array('Aufstellung und Ergebnisse', 'Aufstellung und Ergebnisse des Wettkampfs %s erfassen');
 $GLOBALS['TL_LANG']['tl_teamtournament_matches']['copy'] = array('Wettkampf kopieren', 'Wettkampf %s kopieren');
 $GLOBALS['TL_LANG']['tl_teamtournament_matches']['cut'] = array('Wettkampf verschieben', 'Wettkampf %s verschieben');
 $GLOBALS['TL_LANG']['tl_teamtournament_matches']['delete'] = array('Wettkampf löschen', 'Wettkampf %s löschen');

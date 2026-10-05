@@ -170,7 +170,8 @@ echo "\nKonfiguration\n";
 require $bundle.'/src/Resources/contao/config/config.php';
 pruefe('config.php geladen', true, $fehler);
 pruefe('Backend-Modul teamtournament angemeldet', isset($GLOBALS['BE_MOD']['content']['teamtournament']), $fehler);
-pruefe('drei Inhaltselemente in TL_CTE', 3 === \count($GLOBALS['TL_CTE']['chess'] ?? array()), $fehler);
+pruefe('fuenf Inhaltselemente in der Gruppe teamtournament', 5 === \count($GLOBALS['TL_CTE']['teamtournament'] ?? array()), $fehler);
+pruefe('Gruppenbeschriftung vorhanden', 'Schach-Mannschaftsturnier' === ($GLOBALS['TL_LANG']['CTE']['teamtournament'] ?? ''), $fehler);
 
 // 4. DCA-Dateien laden. Dabei werden DC_Table::class, die DataContainer-
 //    Konstanten und die Rueckrufklassen (extends Backend) tatsaechlich
@@ -212,10 +213,73 @@ pruefe('Helfer::datum(20260916) == 16.09.2026', '16.09.2026' === Schachbulle\Con
 pruefe('Helfer::datum(20260900) == 09.2026', '09.2026' === Schachbulle\ContaoTeamtournamentBundle\Classes\Helfer::datum(20260900), $fehler);
 pruefe('Helfer::datum(0) == leer', '' === Schachbulle\ContaoTeamtournamentBundle\Classes\Helfer::datum(0), $fehler);
 
+// PGN-Viewer: die gebauten Dateien müssen im Bundle liegen, sonst bleibt der
+// Schalter im Frontend wirkungslos
+echo "\nPGN-Viewer\n";
+
+foreach (array('tt-pgn-loader.js', 'tt-pgn-schalter.css', 'tt-pgnviewer.js', 'tt-pgnviewer.css', 'pieces/standard.svg', 'extensions/markers/markers.svg', 'lizenzen/README.txt') as $datei)
+{
+	pruefe('public/pgnviewer/'.$datei, is_file($bundle.'/src/Resources/public/pgnviewer/'.$datei), $fehler);
+}
+
+$pd = 'Schachbulle\ContaoTeamtournamentBundle\Classes\Partiedaten';
+pruefe('Partiedaten::istKampflos(+:-)', $pd::istKampflos('+:-'), $fehler);
+pruefe('Partiedaten::ergebnisWeissSchwarz(1:0, s) == 0–1', '0–1' === $pd::ergebnisWeissSchwarz('1:0', 's'), $fehler);
+pruefe('Partiedaten::json maskiert </script> und {{', false === strpos($pd::json(array('pgn' => '</script>{{x}}')), '</') && false === strpos($pd::json(array('pgn' => '{{x}}')), '{{'), $fehler);
+
+$pgnFeld = $GLOBALS['TL_DCA']['tl_teamtournament_games']['fields']['pgn']['eval'] ?? array();
+pruefe('PGN-Feld speichert ohne Entitäten (decodeEntities, preserveTags)', !empty($pgnFeld['decodeEntities']) && !empty($pgnFeld['preserveTags']), $fehler);
+
+// Rueckweg: in allen vier Kindtabellen eingehaengt, damit der Zurueck-Knopf
+// nicht im Dashboard landet (nur Contao 4.13; Contao 5 rechnet selbst)
+echo "\nZurueck-Knopf\n";
+$rw = 'Schachbulle\ContaoTeamtournamentBundle\Classes\Rueckweg';
+
+foreach (array('tl_teamtournament_teams', 'tl_teamtournament_matches', 'tl_teamtournament_players', 'tl_teamtournament_games') as $tabelle)
+{
+	$arrOnload = $GLOBALS['TL_DCA'][$tabelle]['config']['onload_callback'] ?? array();
+	$blnDa = false;
+
+	foreach ($arrOnload as $cb)
+	{
+		if (is_array($cb) && ($cb[0] ?? '') === $rw && 'merken' === ($cb[1] ?? ''))
+		{
+			$blnDa = true;
+		}
+	}
+
+	pruefe($tabelle.': Rueckweg eingehaengt', $blnDa, $fehler);
+}
+
+pruefe('Rueckweg fuer Partien zeigt auf die Wettkampfliste', 'do=teamtournament&table=tl_teamtournament_matches&id=243' === $rw::parameter('tl_teamtournament_games', 243), $fehler);
+pruefe('Rueckweg fuer Wettkaempfe zeigt auf die Uebersicht', 'do=teamtournament' === $rw::parameter('tl_teamtournament_matches', null), $fehler);
+pruefe('Ergebnismaske ist entfernt', !class_exists('Schachbulle\ContaoTeamtournamentBundle\Classes\Ergebnismaske') && !isset($GLOBALS['BE_MOD']['content']['teamtournament']['results']), $fehler);
+
+// Bilder je Bereich abschaltbar
+foreach (array('hideImages_flags', 'hideImages_lineup', 'hideImages_results') as $feld)
+{
+	$conf = $GLOBALS['TL_DCA']['tl_teamtournament']['fields'][$feld] ?? array();
+	pruefe($feld.': Feld und Palette', 'checkbox' === ($conf['inputType'] ?? '') && false !== strpos($GLOBALS['TL_DCA']['tl_teamtournament']['palettes']['default'], $feld), $fehler);
+}
+
+// Flagge in der Turnieruebersicht
+echo "\nFlaggen\n";
+$hf = 'Schachbulle\ContaoTeamtournamentBundle\Classes\Helfer';
+pruefe('Flaggen-Bundle vorhanden', class_exists('Schachbulle\ContaoFlaggenBundle\Classes\Flaggen'), $fehler);
+pruefe('Laenderkuerzel de wird zu einer Flagge', false !== strpos($hf::flagge('de'), 'flags/de.svg'), $fehler);
+// Der ausgeschriebene Name kommt aus contao.intl.countries; im Pruefstand gibt
+// es den Dienst nicht, dort bleibt das Kuerzel stehen
+pruefe('Flagge traegt einen Tooltip', (bool) preg_match('/title="[^"]+"/', $hf::flagge('de')), $fehler);
+pruefe('Landesname faellt ohne Dienst auf das Kuerzel zurueck', 'DE' === $hf::landesname('DE'), $fehler);
+pruefe('ohne Land bleibt die Spalte leer', '' === $hf::flagge(''), $fehler);
+// xx.svg ist das Ersatzsymbol des Flaggen-Bundles fuer Unbekanntes
+pruefe('unbekanntes Kuerzel bricht nicht ab', '' !== $hf::flagge('xx'), $fehler);
+pruefe('Kuerzel ohne Symbol zeigt den Namen', 'QQ' === $hf::flagge('qq'), $fehler);
+
 // 6. Die Inhaltselemente laden (prueft "extends Contao\ContentElement")
 echo "\nInhaltselemente\n";
 
-foreach (array('LineUp', 'Captain', 'Rounds') as $element)
+foreach (array('LineUp', 'Captain', 'Rounds', 'Standings', 'CrossTable') as $element)
 {
 	$klasse = 'Schachbulle\\ContaoTeamtournamentBundle\\ContentElements\\'.$element;
 	pruefe($klasse, class_exists($klasse), $fehler);
@@ -226,12 +290,31 @@ pruefe('Rounds::getErgebnis(leer) == "-"', '-' === Schachbulle\ContaoTeamtournam
 // Der gemeldete Fehler: 0:4 muss angezeigt werden, nicht als "nicht gewertet" gelten
 pruefe('Rounds::getErgebnis(0, 4) == "0,0 : 4,0"', '0,0 : 4,0' === Schachbulle\ContaoTeamtournamentBundle\ContentElements\Rounds::getErgebnis('0', '4'), $fehler);
 
-// 6b. Ergebnismaske und Wertung
-echo "\nErgebnismaske und Wertung\n";
-pruefe('Klasse Ergebnismaske', class_exists('Schachbulle\ContaoTeamtournamentBundle\Classes\Ergebnismaske'), $fehler);
-pruefe('Ergebnismaske::maske() vorhanden', method_exists('Schachbulle\ContaoTeamtournamentBundle\Classes\Ergebnismaske', 'maske'), $fehler);
-pruefe('Ergebnismaske ist parameterlos erzeugbar (System::importStatic)', (new ReflectionClass('Schachbulle\ContaoTeamtournamentBundle\Classes\Ergebnismaske'))->getConstructor() === null, $fehler);
-pruefe('BE_MOD-Eintrag results zeigt auf die Ergebnismaske', isset($GLOBALS['BE_MOD']['content']['teamtournament']['results']), $fehler);
+// Tabelle und Kreuztabelle
+echo "\nTabelle und Kreuztabelle\n";
+$rl = 'Schachbulle\ContaoTeamtournamentBundle\Classes\Rangliste';
+
+foreach (array('tt-standings' => 'ce_tt-standings', 'tt-crosstable' => 'ce_tt-crosstable') as $typ => $template)
+{
+	pruefe($typ.': Palette vorhanden', isset($GLOBALS['TL_DCA']['tl_content']['palettes'][$typ]), $fehler);
+	pruefe($typ.': Beschriftung vorhanden', !empty($GLOBALS['TL_LANG']['CTE'][$typ][0]), $fehler);
+	pruefe($typ.': Template '.$template.'.html5', is_file($bundle.'/src/Resources/contao/templates/'.$template.'.html5'), $fehler);
+}
+
+$arrProbe = $rl::ausWettkaempfen(
+	array(1 => array('name' => 'A'), 2 => array('name' => 'B'), 3 => array('name' => 'C')),
+	array(
+		array('team1' => 1, 'team2' => 2, 'resultTeam1' => '2.5', 'resultTeam2' => '1.5'),
+		array('team1' => 2, 'team2' => 3, 'resultTeam1' => '', 'resultTeam2' => ''),
+	)
+);
+
+pruefe('Sieger steht oben, 2 Mannschaftspunkte', 1 === $arrProbe[0]['id'] && 2 === $arrProbe[0]['mp'], $fehler);
+pruefe('Brettpunkte mit halben Punkten', 2.5 === $arrProbe[0]['bp'], $fehler);
+pruefe('Wettkampf ohne Ergebnis zaehlt nicht', 0 === $arrProbe[2]['kaempfe'], $fehler);
+pruefe('Markup der Tabelle enthaelt die Mannschaft', false !== strpos($rl::markupTabelle($arrProbe), '<th class="team" scope="row">A</th>'), $fehler);
+pruefe('Markup der Kreuztabelle hat einen Scrollrahmen', 0 === strpos($rl::markupKreuztabelle(array('tabelle' => $arrProbe, 'zellen' => array())), '<div class="tt-kreuztabelle-rahmen">'), $fehler);
+
 
 $arrWertung = Schachbulle\ContaoTeamtournamentBundle\Classes\Wertung::punkte('½:½');
 pruefe('Wertung::punkte(remis) == 0.5/0.5', array(0.5, 0.5) === $arrWertung, $fehler);

@@ -13,6 +13,7 @@ use Contao\Backend;
 use Contao\BackendUser;
 use Contao\DataContainer;
 use Contao\DC_Table;
+use Schachbulle\ContaoTeamtournamentBundle\Classes\Rueckweg;
 use Contao\Image;
 use Contao\StringUtil;
 use Contao\System;
@@ -31,6 +32,11 @@ $GLOBALS['TL_DCA']['tl_teamtournament_teams'] = array
 		'ptable'                      => 'tl_teamtournament',
 		'ctable'                      => array('tl_teamtournament_players'),
 		'switchToEdit'                => true,
+		// Legt den Rückweg des Zurück-Knopfes fest, siehe Classes\Rueckweg
+		'onload_callback'             => array
+		(
+			array(Rueckweg::class, 'merken')
+		),
 		'enableVersioning'            => true,
 		'sql' => array
 		(

@@ -47,3 +47,110 @@
 	font-weight: bold;
 	font-size: 16px;
 }
+
+/* ********************************************************* */
+/* Inhaltselement Tabelle (Rangliste)                        */
+/* ********************************************************* */
+
+.ce_tt-standings table {
+	width: 100%;
+	border-collapse: collapse;
+}
+
+.ce_tt-standings th,
+.ce_tt-standings td {
+	padding: 4px 6px;
+	border-bottom: 1px solid #c0c0c0;
+}
+
+.ce_tt-standings thead th {
+	border-bottom: 2px solid #808080;
+}
+
+/* Die Mannschaftsspalte ist eine Kopfzelle (scope="row"); Browser zentrieren
+   th von Haus aus, der Name soll aber links stehen */
+.ce_tt-standings thead th,
+.ce_tt-standings .team {
+	text-align: left;
+}
+
+.ce_tt-standings .rang,
+.ce_tt-standings .kaempfe,
+.ce_tt-standings .siege,
+.ce_tt-standings .remis,
+.ce_tt-standings .niederlagen,
+.ce_tt-standings .mp,
+.ce_tt-standings .bp {
+	width: 8%;
+	text-align: right;
+	white-space: nowrap;
+}
+
+.ce_tt-standings thead .rang,
+.ce_tt-standings thead .kaempfe,
+.ce_tt-standings thead .siege,
+.ce_tt-standings thead .remis,
+.ce_tt-standings thead .niederlagen,
+.ce_tt-standings thead .mp,
+.ce_tt-standings thead .bp {
+	text-align: right;
+}
+
+.ce_tt-standings .mp,
+.ce_tt-standings .bp {
+	font-weight: bold;
+}
+
+.ce_tt-standings .team img,
+.ce_tt-crosstable .team img {
+	vertical-align: middle;
+	margin-right: 4px;
+}
+
+/* ********************************************************* */
+/* Inhaltselement Kreuztabelle                               */
+/* ********************************************************* */
+
+/* Bei vielen Mannschaften wird die Tabelle breiter als die Seite; der Rahmen
+   lässt sie waagerecht scrollen, statt das Layout zu sprengen */
+.tt-kreuztabelle-rahmen {
+	overflow-x: auto;
+}
+
+.ce_tt-crosstable table {
+	border-collapse: collapse;
+}
+
+.ce_tt-crosstable th,
+.ce_tt-crosstable td {
+	padding: 3px 6px;
+	border: 1px solid #c0c0c0;
+	white-space: nowrap;
+}
+
+.ce_tt-crosstable thead th {
+	background-color: #f0f0f0;
+}
+
+.ce_tt-crosstable .team {
+	text-align: left;
+}
+
+.ce_tt-crosstable .nummer,
+.ce_tt-crosstable .gegner,
+.ce_tt-crosstable .ergebnis,
+.ce_tt-crosstable .mp,
+.ce_tt-crosstable .bp,
+.ce_tt-crosstable .rang {
+	text-align: center;
+}
+
+/* Die Diagonale hebt sich ab, damit die Zeile leicht zu verfolgen ist */
+.ce_tt-crosstable .selbst {
+	background-color: #e0e0e0;
+}
+
+.ce_tt-crosstable .mp,
+.ce_tt-crosstable .bp {
+	font-weight: bold;
+}

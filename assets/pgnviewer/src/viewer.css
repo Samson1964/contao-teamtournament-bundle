@@ -1,0 +1,271 @@
+/*
+ * PGN-Viewer der Mannschaftsturniere — Stylesheet
+ *
+ * Wird zusammen mit dem Viewer erst beim ersten Öffnen einer Partie geladen.
+ * Die beiden @import-Zeilen holt esbuild beim Build in dieselbe Datei.
+ *
+ * Kontraste (gegen den weißen Grund des Viewers gemessen):
+ *   Fließtext #1a1a1a  17,4:1
+ *   Kommentar #333333  12,6:1
+ *   Rahmen/Linien #767676  4,5:1 (Mindestwert für Bedienelemente 3:1)
+ *   aktueller Zug: #ffffff auf #1f4e8c  8,6:1
+ *   Fokusrahmen #1f4e8c gegen Weiß  8,6:1
+ *
+ * Der Viewer setzt Grund- und Schriftfarbe selbst, damit die Kontraste auch
+ * auf dunklen oder farbigen Seitenhintergründen gelten.
+ */
+
+@import "cm-chessboard/assets/chessboard.css";
+@import "cm-chessboard/assets/extensions/markers/markers.css";
+
+.tt-pgnv {
+    box-sizing: border-box;
+    /* Auf dem Handy ist die Tabelle der Rundenübersicht oft breiter als der
+       Bildschirm; der Viewer soll trotzdem in den sichtbaren Bereich passen */
+    max-width: min(100%, calc(100vw - 2rem));
+    margin: 0.5rem 0 1rem;
+    padding: 0.75rem;
+    border: 1px solid #767676;
+    border-radius: 4px;
+    background: #fff;
+    color: #1a1a1a;
+    font-size: 1rem;
+    font-weight: normal;
+    line-height: 1.5;
+    text-align: left;
+}
+
+.tt-pgnv *,
+.tt-pgnv *::before,
+.tt-pgnv *::after {
+    box-sizing: border-box;
+}
+
+/* Eigene display-Angaben (grid, flex) überstimmen sonst das hidden-Attribut:
+   Bei unlesbarem PGN blieben Navigationsknöpfe ohne Brett stehen */
+.tt-pgnv [hidden] {
+    display: none !important;
+}
+
+/* Kopf ---------------------------------------------------------------- */
+
+.tt-pgnv__kopf {
+    margin-bottom: 0.75rem;
+}
+
+.tt-pgnv__kopf p {
+    margin: 0 0 0.25rem;
+}
+
+.tt-pgnv__farbfeld {
+    display: inline-block;
+    width: 0.9em;
+    height: 0.9em;
+    margin-right: 0.35em;
+    border: 1px solid #1a1a1a;
+    vertical-align: -0.1em;
+}
+
+.tt-pgnv__spieler--weiss .tt-pgnv__farbfeld {
+    background: #fff;
+}
+
+.tt-pgnv__spieler--schwarz .tt-pgnv__farbfeld {
+    background: #1a1a1a;
+}
+
+.tt-pgnv__meta {
+    color: #333;
+}
+
+.tt-pgnv__auswahl {
+    margin-bottom: 0.75rem;
+}
+
+.tt-pgnv__partiewahl {
+    min-height: 44px;
+    padding: 0.25rem 0.5rem;
+    border: 1px solid #767676;
+    background: #fff;
+    color: #1a1a1a;
+    font: inherit;
+}
+
+.tt-pgnv__fehler {
+    margin: 0 0 0.75rem;
+    padding: 0.5rem 0.75rem;
+    border: 2px solid #a4000f;
+    border-left-width: 6px;
+    background: #fff;
+    color: #1a1a1a;
+}
+
+/* Inhalt: Brett und Zugliste --------------------------------------------- */
+
+.tt-pgnv__inhalt {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1rem;
+}
+
+/* Ab mittlerer Breite stehen Brett und Zugliste nebeneinander. Darunter —
+   also auf dem Handy — steht das Brett in voller Breite und die Liste darunter */
+@media (min-width: 48em) {
+    .tt-pgnv__inhalt {
+        grid-template-columns: minmax(16rem, 26rem) minmax(0, 1fr);
+        align-items: start;
+    }
+}
+
+.tt-pgnv__brett {
+    width: 100%;
+}
+
+/* Die Koordinaten stehen bei cm-chessboard hellbraun auf dem beigen Rahmen
+   (unter 2:1). Dunkel gesetzt erreichen sie über 12:1 */
+.tt-pgnv .cm-chessboard .coordinates .coordinate {
+    fill: #1a1a1a;
+}
+
+.tt-pgnv__steuerung {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+.tt-pgnv__knopf {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    /* Mindestgröße für Touch-Bedienung */
+    min-width: 44px;
+    min-height: 44px;
+    padding: 0;
+    border: 1px solid #767676;
+    border-radius: 4px;
+    background: #fff;
+    color: #1a1a1a;
+    cursor: pointer;
+}
+
+.tt-pgnv__knopf svg {
+    fill: currentColor;
+}
+
+.tt-pgnv__knopf:hover {
+    background: #e8e8e8;
+}
+
+.tt-pgnv__knopf[aria-disabled="true"] {
+    color: #767676;
+    cursor: default;
+}
+
+.tt-pgnv__knopf[aria-disabled="true"]:hover {
+    background: #fff;
+}
+
+.tt-pgnv__zuege {
+    /* offsetParent für das Scrollen in der Liste, siehe inListeSichtbar() */
+    position: relative;
+    max-height: 26rem;
+    overflow-y: auto;
+    padding: 0.25rem;
+}
+
+@media (max-width: 47.99em) {
+    .tt-pgnv__zuege {
+        max-height: 18rem;
+    }
+}
+
+.tt-pgnv__nummer {
+    color: #333;
+    font-variant-numeric: tabular-nums;
+}
+
+.tt-pgnv__zug {
+    display: inline;
+    margin: 0;
+    padding: 0.1em 0.25em;
+    border: 1px solid transparent;
+    border-radius: 3px;
+    background: transparent;
+    color: #1a1a1a;
+    font: inherit;
+    line-height: 1.6;
+    cursor: pointer;
+}
+
+.tt-pgnv__zug:hover {
+    border-color: #767676;
+    text-decoration: underline;
+}
+
+/* Der aktuelle Zug ist nicht nur farbig, sondern auch fett und eingerahmt —
+   erkennbar also auch ohne Farbwahrnehmung und in Graustufen */
+.tt-pgnv__zug.ist-aktuell {
+    border-color: #1f4e8c;
+    background: #1f4e8c;
+    color: #fff;
+    font-weight: bold;
+}
+
+.tt-pgnv__kommentar {
+    color: #333;
+    font-style: italic;
+}
+
+.tt-pgnv__variante {
+    margin: 0.25rem 0 0.25rem 0.75rem;
+    padding-left: 0.6rem;
+    border-left: 3px solid #767676;
+}
+
+.tt-pgnv__variante .tt-pgnv__zug {
+    font-size: 0.95em;
+}
+
+.tt-pgnv__klammer {
+    color: #333;
+}
+
+/* Fokus immer deutlich sichtbar, auch auf dem hervorgehobenen Zug */
+.tt-pgnv__knopf:focus-visible,
+.tt-pgnv__zug:focus-visible,
+.tt-pgnv__partiewahl:focus-visible {
+    outline: 3px solid #1f4e8c;
+    outline-offset: 2px;
+}
+
+.tt-pgnv__zug.ist-aktuell:focus-visible {
+    outline-color: #1a1a1a;
+}
+
+/* Windows-Kontrastmodus: Systemfarben übernehmen, Markierung als Rahmen */
+@media (forced-colors: active) {
+    .tt-pgnv__zug.ist-aktuell {
+        border: 2px solid Highlight;
+        forced-color-adjust: none;
+        background: Highlight;
+        color: HighlightText;
+    }
+
+    .tt-pgnv__farbfeld {
+        forced-color-adjust: none;
+    }
+}
+
+/* Nur für Bildschirmleser */
+.tt-pgnv-unsichtbar {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    margin: -1px !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    clip: rect(0, 0, 0, 0) !important;
+    white-space: nowrap !important;
+    border: 0 !important;
+}

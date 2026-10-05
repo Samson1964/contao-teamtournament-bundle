@@ -80,6 +80,19 @@ class HelferTest extends TestCase
 	}
 
 	/**
+	 * Ohne Land bleibt die Spalte leer; ohne Contao-Behälter erscheint das Kürzel.
+	 *
+	 * Die Flagge selbst lässt sich hier nicht prüfen: Dafür braucht es das
+	 * Flaggen-Bundle und den Behälter. Das übernimmt der Prüfstand.
+	 */
+	public function testFlaggeOhneLandUndOhneDienste(): void
+	{
+		$this->assertSame('', Helfer::flagge(null));
+		$this->assertSame('', Helfer::flagge(' '));
+		$this->assertSame('XX', Helfer::landesname('XX'));
+	}
+
+	/**
 	 * Prüft, dass ohne hinterlegtes Bild kein Markup entsteht.
 	 *
 	 * Der Fall wird abgefangen, bevor der Bilderdienst überhaupt geholt wird —
