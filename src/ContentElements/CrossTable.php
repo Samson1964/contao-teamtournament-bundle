@@ -51,7 +51,7 @@ class CrossTable extends ContentElement
 			return;
 		}
 
-		$arrDaten = Rangliste::kreuztabelle((int) $this->teamtournament_turnier);
+		$arrDaten = Rangliste::kreuztabelle((int) $this->teamtournament_turnier, (int) $this->teamtournament_runde ?: null);
 
 		if (!$arrDaten['tabelle'])
 		{

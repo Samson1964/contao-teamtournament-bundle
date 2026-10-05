@@ -51,7 +51,7 @@ class Standings extends ContentElement
 			return;
 		}
 
-		$arrTabelle = Rangliste::fuerTurnier((int) $this->teamtournament_turnier);
+		$arrTabelle = Rangliste::fuerTurnier((int) $this->teamtournament_turnier, (int) $this->teamtournament_runde ?: null);
 
 		if (!$arrTabelle)
 		{

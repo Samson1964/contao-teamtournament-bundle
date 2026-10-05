@@ -43,13 +43,27 @@ final class Rangliste
 	 * Gezählt werden nur Wettkämpfe mit eingetragenem Ergebnis. Ein noch nicht
 	 * gespielter Wettkampf darf die Tabelle nicht als 0:0 verfälschen.
 	 *
-	 * @param int $intTurnier Kennung des Turniers
+	 * @param int      $intTurnier Kennung des Turniers
+	 * @param int|null $intRunde   Nur Wettkämpfe bis einschließlich dieser Runde
+	 *                             zählen; null nimmt alle Runden
 	 *
 	 * @return array<int, array<string, mixed>> Die Mannschaften in der
 	 *                                          Reihenfolge der Tabelle, siehe
 	 *                                          ausWettkaempfen()
 	 */
-	public static function fuerTurnier(int $intTurnier): array
+	public static function fuerTurnier(int $intTurnier, ?int $intRunde = null): array
+	{
+		return self::ausWettkaempfen(self::ladeMannschaften($intTurnier), self::ladeWettkaempfe($intTurnier), $intRunde);
+	}
+
+	/**
+	 * Liest die Mannschaften eines Turniers.
+	 *
+	 * @param int $intTurnier Kennung des Turniers
+	 *
+	 * @return array<int, array<string, mixed>> Kennung => name, country, flag
+	 */
+	private static function ladeMannschaften(int $intTurnier): array
 	{
 		$arrMannschaften = array();
 
@@ -67,10 +81,27 @@ final class Rangliste
 			);
 		}
 
+		return $arrMannschaften;
+	}
+
+	/**
+	 * Liest die Wettkämpfe eines Turniers samt Anzahl der gespielten Bretter.
+	 *
+	 * Die Unterabfrage zählt die Bretter mit Ergebnis. Daran hängt, ob ein
+	 * Wettkampf überhaupt gespielt wurde (siehe istGewertet()).
+	 *
+	 * @param int $intTurnier Kennung des Turniers
+	 *
+	 * @return array<int, array<string, mixed>> Liste mit team1, team2,
+	 *                                          resultTeam1, resultTeam2, round
+	 *                                          und bretter
+	 */
+	private static function ladeWettkaempfe(int $intTurnier): array
+	{
 		$arrWettkaempfe = array();
 
 		$objWettkaempfe = Database::getInstance()
-			->prepare("SELECT team1, team2, resultTeam1, resultTeam2 FROM tl_teamtournament_matches WHERE pid=?")
+			->prepare("SELECT m.team1, m.team2, m.resultTeam1, m.resultTeam2, m.round, (SELECT COUNT(*) FROM tl_teamtournament_games g WHERE g.pid=m.id AND g.result!='') AS bretter FROM tl_teamtournament_matches m WHERE m.pid=? ORDER BY m.round ASC, m.board ASC, m.id ASC")
 			->execute($intTurnier);
 
 		while ($objWettkaempfe->next())
@@ -81,10 +112,12 @@ final class Rangliste
 				'team2'       => (int) $objWettkaempfe->team2,
 				'resultTeam1' => $objWettkaempfe->resultTeam1,
 				'resultTeam2' => $objWettkaempfe->resultTeam2,
+				'round'       => (int) $objWettkaempfe->round,
+				'bretter'     => (int) $objWettkaempfe->bretter,
 			);
 		}
 
-		return self::ausWettkaempfen($arrMannschaften, $arrWettkaempfe);
+		return $arrWettkaempfe;
 	}
 
 	/**
@@ -101,13 +134,17 @@ final class Rangliste
 	 *                                                          country, flag
 	 * @param array<int, array<string, mixed>> $arrWettkaempfe  Liste mit team1,
 	 *                                                          team2, resultTeam1,
-	 *                                                          resultTeam2
+	 *                                                          resultTeam2, dazu
+	 *                                                          round und bretter
+	 * @param int|null                         $intRunde        Nur Wettkämpfe bis
+	 *                                                          einschließlich dieser
+	 *                                                          Runde zählen
 	 *
 	 * @return array<int, array<string, mixed>> Je Mannschaft: id, name, country,
 	 *                                          flag, kaempfe, siege, remis,
 	 *                                          niederlagen, mp, bp, bpGegen, rang
 	 */
-	public static function ausWettkaempfen(array $arrMannschaften, array $arrWettkaempfe): array
+	public static function ausWettkaempfen(array $arrMannschaften, array $arrWettkaempfe, ?int $intRunde = null): array
 	{
 		$arrTabelle = array();
 
@@ -141,7 +178,13 @@ final class Rangliste
 				continue;
 			}
 
-			if (!self::istGewertet($arrWettkampf['resultTeam1'] ?? '', $arrWettkampf['resultTeam2'] ?? ''))
+			// „Stand nach Runde X": spätere Runden bleiben außen vor
+			if (null !== $intRunde && (int) ($arrWettkampf['round'] ?? 0) > $intRunde)
+			{
+				continue;
+			}
+
+			if (!self::istGewertet($arrWettkampf['resultTeam1'] ?? '', $arrWettkampf['resultTeam2'] ?? '', (int) ($arrWettkampf['bretter'] ?? 0)))
 			{
 				continue;
 			}
@@ -216,36 +259,60 @@ final class Rangliste
 	 * Begegnungen zweier Mannschaften (Hin- und Rückrunde) stehen beide in
 	 * derselben Zelle.
 	 *
-	 * @param int $intTurnier Kennung des Turniers
+	 * @param int      $intTurnier Kennung des Turniers
+	 * @param int|null $intRunde   Nur Wettkämpfe bis einschließlich dieser Runde
+	 *                             zeigen; null nimmt alle Runden
 	 *
 	 * @return array{tabelle: array<int, array<string, mixed>>, zellen: array<int, array<int, array<int, string>>>}
 	 *         'tabelle' ist die Rangliste, 'zellen' enthält je Mannschaftspaar
 	 *         die Ergebnisse aus Sicht der Zeilenmannschaft ('2,5 : 1,5')
 	 */
-	public static function kreuztabelle(int $intTurnier): array
+	public static function kreuztabelle(int $intTurnier, ?int $intRunde = null): array
 	{
-		$arrTabelle = self::fuerTurnier($intTurnier);
+		$arrWettkaempfe = self::ladeWettkaempfe($intTurnier);
+
+		return array
+		(
+			'tabelle' => self::ausWettkaempfen(self::ladeMannschaften($intTurnier), $arrWettkaempfe, $intRunde),
+			'zellen'  => self::zellen($arrWettkaempfe, $intRunde),
+		);
+	}
+
+	/**
+	 * Stellt die Zellen der Kreuztabelle zusammen.
+	 *
+	 * Jede Begegnung steht zweimal darin, einmal aus Sicht jeder der beiden
+	 * Mannschaften.
+	 *
+	 * @param array<int, array<string, mixed>> $arrWettkaempfe Die Wettkämpfe
+	 * @param int|null                         $intRunde       Grenze der Runde
+	 *
+	 * @return array<int, array<int, array<int, string>>> Zeile => Spalte => Ergebnisse
+	 */
+	public static function zellen(array $arrWettkaempfe, ?int $intRunde = null): array
+	{
 		$arrZellen = array();
 
-		$objWettkaempfe = Database::getInstance()
-			->prepare("SELECT team1, team2, resultTeam1, resultTeam2 FROM tl_teamtournament_matches WHERE pid=? ORDER BY round ASC, board ASC, id ASC")
-			->execute($intTurnier);
-
-		while ($objWettkaempfe->next())
+		foreach ($arrWettkaempfe as $arrWettkampf)
 		{
-			$intEins = (int) $objWettkaempfe->team1;
-			$intZwei = (int) $objWettkaempfe->team2;
-
-			if (!self::istGewertet($objWettkaempfe->resultTeam1, $objWettkaempfe->resultTeam2))
+			if (null !== $intRunde && (int) ($arrWettkampf['round'] ?? 0) > $intRunde)
 			{
 				continue;
 			}
 
-			$arrZellen[$intEins][$intZwei][] = Wertung::ausZahl($objWettkaempfe->resultTeam1).' : '.Wertung::ausZahl($objWettkaempfe->resultTeam2);
-			$arrZellen[$intZwei][$intEins][] = Wertung::ausZahl($objWettkaempfe->resultTeam2).' : '.Wertung::ausZahl($objWettkaempfe->resultTeam1);
+			if (!self::istGewertet($arrWettkampf['resultTeam1'] ?? '', $arrWettkampf['resultTeam2'] ?? '', (int) ($arrWettkampf['bretter'] ?? 0)))
+			{
+				continue;
+			}
+
+			$intEins = (int) $arrWettkampf['team1'];
+			$intZwei = (int) $arrWettkampf['team2'];
+
+			$arrZellen[$intEins][$intZwei][] = Wertung::ausZahl($arrWettkampf['resultTeam1']).' : '.Wertung::ausZahl($arrWettkampf['resultTeam2']);
+			$arrZellen[$intZwei][$intEins][] = Wertung::ausZahl($arrWettkampf['resultTeam2']).' : '.Wertung::ausZahl($arrWettkampf['resultTeam1']);
 		}
 
-		return array('tabelle' => $arrTabelle, 'zellen' => $arrZellen);
+		return $arrZellen;
 	}
 
 	/**
@@ -371,19 +438,58 @@ final class Rangliste
 	}
 
 	/**
-	 * Prüft, ob ein Wettkampf gewertet ist.
+	 * Prüft, ob ein Wettkampf gespielt und damit zu werten ist.
 	 *
-	 * Maßgeblich ist, ob überhaupt etwas eingetragen wurde — eine Null ist ein
-	 * Ergebnis (0:4), eine leere Eingabe nicht. Dieselbe Unterscheidung trifft
-	 * die Liste im Backend.
+	 * Die Prüfung „das Feld ist nicht leer" genügt hier nicht. In der
+	 * Datenbank steht bei ungespielten Wettkämpfen in aller Regel 0.0 : 0.0:
 	 *
-	 * @param mixed $varEins Brettpunkte der ersten Mannschaft
-	 * @param mixed $varZwei Brettpunkte der zweiten Mannschaft
+	 * - Wertung::schreibeWettkampf() trägt bei Turnieren mit errechneten
+	 *   Mannschaftspunkten in jeden Wettkampf eine Summe ein, auch wenn noch
+	 *   kein Brett ein Ergebnis hat.
+	 * - Bis 0.4.2 machte die Eingabemaske aus einem leeren Punktefeld bei
+	 *   jedem Speichern eine 0.0.
+	 *
+	 * Solche Wettkämpfe zählten als Unentschieden und verfälschten die ganze
+	 * Tabelle. Maßgeblich ist deshalb: Hat mindestens ein Brett ein Ergebnis,
+	 * gilt der Wettkampf als gespielt — damit zählt auch ein echtes 0:0, bei
+	 * dem beide Mannschaften an allen Brettern kampflos verloren haben. Gibt
+	 * es gar keine Bretter, weil nur Mannschaftsergebnisse gepflegt werden,
+	 * entscheidet die Summe: Alles über null ist ein Ergebnis.
+	 *
+	 * Nicht unterscheidbar bleibt ein von Hand eingetragenes 0:0 ohne Bretter.
+	 * Das ist hingenommen: Es käme praktisch nicht vor, ein versehentliches
+	 * 0.0 aus den Altdaten dagegen in jedem zweiten Wettkampf.
+	 *
+	 * @param mixed $varEins    Brettpunkte der ersten Mannschaft
+	 * @param mixed $varZwei    Brettpunkte der zweiten Mannschaft
+	 * @param int   $intBretter Anzahl der Bretter dieses Wettkampfes mit Ergebnis
 	 *
 	 * @return bool true, wenn der Wettkampf in die Wertung gehört
 	 */
-	public static function istGewertet($varEins, $varZwei): bool
+	public static function istGewertet($varEins, $varZwei, int $intBretter = 0): bool
 	{
-		return '' !== trim((string) $varEins) || '' !== trim((string) $varZwei);
+		if ($intBretter > 0)
+		{
+			return true;
+		}
+
+		$fltSumme = self::inZahl($varEins) + self::inZahl($varZwei);
+
+		return $fltSumme > 0;
+	}
+
+	/**
+	 * Liest einen Punktwert aus der Datenbank als Zahl.
+	 *
+	 * In den Feldern steht der Punkt als Dezimaltrennzeichen, in Altbeständen
+	 * kommt auch das Komma vor.
+	 *
+	 * @param mixed $varWert Der gespeicherte Wert
+	 *
+	 * @return float Die Punktzahl; 0.0 bei leeren und unlesbaren Werten
+	 */
+	private static function inZahl($varWert): float
+	{
+		return (float) str_replace(',', '.', trim((string) $varWert));
 	}
 }

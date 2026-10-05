@@ -290,6 +290,11 @@ pruefe('Rounds::getErgebnis(leer) == "-"', '-' === Schachbulle\ContaoTeamtournam
 // Der gemeldete Fehler: 0:4 muss angezeigt werden, nicht als "nicht gewertet" gelten
 pruefe('Rounds::getErgebnis(0, 4) == "0,0 : 4,0"', '0,0 : 4,0' === Schachbulle\ContaoTeamtournamentBundle\ContentElements\Rounds::getErgebnis('0', '4'), $fehler);
 
+// Ein ungespielter Wettkampf steht in der Datenbank als 0.0 : 0.0 (siehe
+// Rangliste::istGewertet) und darf weder angezeigt noch gewertet werden
+pruefe('Rounds::getErgebnis("0.0","0.0") ohne Bretter == "-"', '-' === Schachbulle\ContaoTeamtournamentBundle\ContentElements\Rounds::getErgebnis('0.0', '0.0'), $fehler);
+pruefe('Rounds::getErgebnis("0.0","0.0") mit Brettern zeigt das Ergebnis', '0,0 : 0,0' === Schachbulle\ContaoTeamtournamentBundle\ContentElements\Rounds::getErgebnis('0.0', '0.0', 4), $fehler);
+
 // Tabelle und Kreuztabelle
 echo "\nTabelle und Kreuztabelle\n";
 $rl = 'Schachbulle\ContaoTeamtournamentBundle\Classes\Rangliste';
@@ -312,6 +317,23 @@ $arrProbe = $rl::ausWettkaempfen(
 pruefe('Sieger steht oben, 2 Mannschaftspunkte', 1 === $arrProbe[0]['id'] && 2 === $arrProbe[0]['mp'], $fehler);
 pruefe('Brettpunkte mit halben Punkten', 2.5 === $arrProbe[0]['bp'], $fehler);
 pruefe('Wettkampf ohne Ergebnis zaehlt nicht', 0 === $arrProbe[2]['kaempfe'], $fehler);
+
+// Der in 0.5.0 gemeldete Fehler: 0.0 : 0.0 wurde als Unentschieden gewertet
+$arrNull = $rl::ausWettkaempfen(
+	array(1 => array('name' => 'A'), 2 => array('name' => 'B')),
+	array(array('team1' => 1, 'team2' => 2, 'resultTeam1' => '0.0', 'resultTeam2' => '0.0', 'bretter' => 0))
+);
+pruefe('0.0 : 0.0 ohne Bretter ist kein Unentschieden', 0 === $arrNull[0]['mp'] && 0 === $arrNull[0]['kaempfe'], $fehler);
+
+$arrRunde = $rl::ausWettkaempfen(
+	array(1 => array('name' => 'A'), 2 => array('name' => 'B'), 3 => array('name' => 'C')),
+	array(
+		array('team1' => 1, 'team2' => 2, 'resultTeam1' => '3', 'resultTeam2' => '1', 'round' => 1),
+		array('team1' => 1, 'team2' => 3, 'resultTeam1' => '3', 'resultTeam2' => '1', 'round' => 2),
+	),
+	1
+);
+pruefe('Stand nach Runde 1 zaehlt nur die erste Runde', 2 === $arrRunde[0]['mp'] && 1 === $arrRunde[0]['kaempfe'], $fehler);
 pruefe('Markup der Tabelle enthaelt die Mannschaft', false !== strpos($rl::markupTabelle($arrProbe), '<th class="team" scope="row">A</th>'), $fehler);
 pruefe('Markup der Kreuztabelle hat einen Scrollrahmen', 0 === strpos($rl::markupKreuztabelle(array('tabelle' => $arrProbe, 'zellen' => array())), '<div class="tt-kreuztabelle-rahmen">'), $fehler);
 

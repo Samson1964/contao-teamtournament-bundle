@@ -1,5 +1,25 @@
 # Mannschaftsturniere-Bundle Changelog
 
+## Version 0.5.1 (2026-10-05)
+
+Keine Änderung an der Datenbank.
+
+* Fix: **Noch nicht gespielte Wettkämpfe zählten in Tabelle und Kreuztabelle als
+  Unentschieden.** Jede Mannschaft bekam damit für jede offene Begegnung einen Punkt, und
+  die Tabelle war unbrauchbar. Die Prüfung „im Punktefeld steht etwas" greift bei diesen
+  Daten nicht: `Wertung::schreibeWettkampf()` trägt bei Turnieren mit errechneten
+  Mannschaftspunkten in jeden Wettkampf eine Summe ein, auch in einen leeren, und bis 0.4.2
+  machte die Eingabemaske aus einem leeren Punktefeld bei jedem Speichern eine `0.0`. Als
+  gespielt gilt ein Wettkampf jetzt, sobald mindestens ein Brett ein Ergebnis hat; ohne
+  Bretter entscheidet die Summe. Ein echtes 0:0, bei dem an allen Brettern beide Seiten
+  kampflos verloren haben, zählt dadurch weiterhin als Unentschieden.
+* Fix: Dieselbe Verwechslung in der Rundenübersicht im Frontend: Ein ungespielter Wettkampf
+  stand dort als „0,0 : 0,0" statt als „-".
+* Add: **Tabelle und Kreuztabelle lassen sich auf eine Runde eingrenzen.** Ist am
+  Inhaltselement eine Runde gewählt, zählen alle Wettkämpfe bis einschließlich dieser Runde
+  („Stand nach Runde X"); ohne Angabe gelten weiterhin alle Runden. Das Feld ist dasselbe
+  wie bei der Rundenübersicht, seine Beschreibung nennt jetzt beide Bedeutungen.
+
 ## Version 0.5.0 (2026-10-05)
 
 Die Beschreibung des PGN-Viewers steht in der README unter „Partien nachspielen", Quellen

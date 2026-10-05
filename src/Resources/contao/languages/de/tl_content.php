@@ -7,4 +7,4 @@ $GLOBALS['TL_LANG']['tl_content']['teamtournament_lineup'] = array('Mannschaft',
 $GLOBALS['TL_LANG']['tl_content']['tt-pairings_legend'] = 'Turnier und Runde';
 $GLOBALS['TL_LANG']['tl_content']['tt-table_legend'] = 'Turnier';
 $GLOBALS['TL_LANG']['tl_content']['teamtournament_turnier'] = array('Turnier', 'Turnier auswählen');
-$GLOBALS['TL_LANG']['tl_content']['teamtournament_runde'] = array('Runde', 'Runde auswählen');
+$GLOBALS['TL_LANG']['tl_content']['teamtournament_runde'] = array('Runde', 'Bei der Rundenübersicht die Runde, die ausgegeben wird. Bei Tabelle und Kreuztabelle zählen alle Wettkämpfe bis einschließlich dieser Runde („Stand nach Runde X"); ohne Angabe gelten alle Runden.');

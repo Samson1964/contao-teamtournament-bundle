@@ -146,9 +146,93 @@ class RanglisteTest extends TestCase
 		$this->assertSame(1, $this->zeile($arrTabelle, 3)['niederlagen']);
 
 		$this->assertTrue(Rangliste::istGewertet('0', '4'));
-		$this->assertTrue(Rangliste::istGewertet('', '0'));
 		$this->assertFalse(Rangliste::istGewertet('', ''));
 		$this->assertFalse(Rangliste::istGewertet(null, ' '));
+		$this->assertFalse(Rangliste::istGewertet('', '0'), 'Eine Null allein ist kein Ergebnis');
+	}
+
+	/**
+	 * Ein ungespielter Wettkampf mit 0.0 : 0.0 darf nicht als Unentschieden zählen.
+	 *
+	 * So steht es in den Daten: Wertung::schreibeWettkampf() trägt bei
+	 * Turnieren mit errechneten Mannschaftspunkten in jeden Wettkampf eine
+	 * Summe ein, und bis 0.4.2 machte die Eingabemaske aus einem leeren
+	 * Punktefeld bei jedem Speichern eine 0.0. In 0.5.0 bekam dadurch jede
+	 * Mannschaft für jeden noch nicht gespielten Wettkampf einen Punkt.
+	 */
+	public function testNullergebnisOhneBretterZaehltNicht(): void
+	{
+		$arrTabelle = Rangliste::ausWettkaempfen($this->mannschaften(), array
+		(
+			array('team1' => 1, 'team2' => 2, 'resultTeam1' => '0.0', 'resultTeam2' => '0.0', 'bretter' => 0),
+		));
+
+		$this->assertSame(0, $this->zeile($arrTabelle, 1)['kaempfe']);
+		$this->assertSame(0, $this->zeile($arrTabelle, 1)['mp']);
+		$this->assertSame(0, $this->zeile($arrTabelle, 2)['mp']);
+		$this->assertFalse(Rangliste::istGewertet('0.0', '0.0'));
+	}
+
+	/**
+	 * Ein echtes 0:0 zählt, wenn die Bretter Ergebnisse haben.
+	 *
+	 * Das kommt vor, wenn an allen Brettern beide Seiten kampflos verloren
+	 * haben; dann steht an den Brettern „-:-", die Summe ist 0:0 und der
+	 * Wettkampf ist trotzdem gespielt.
+	 */
+	public function testNullergebnisMitBretternZaehlt(): void
+	{
+		$arrTabelle = Rangliste::ausWettkaempfen($this->mannschaften(), array
+		(
+			array('team1' => 1, 'team2' => 2, 'resultTeam1' => '0.0', 'resultTeam2' => '0.0', 'bretter' => 4),
+		));
+
+		$this->assertSame(1, $this->zeile($arrTabelle, 1)['kaempfe']);
+		$this->assertSame(1, $this->zeile($arrTabelle, 1)['remis']);
+		$this->assertSame(1, $this->zeile($arrTabelle, 1)['mp']);
+		$this->assertTrue(Rangliste::istGewertet('0.0', '0.0', 4));
+	}
+
+	/**
+	 * „Stand nach Runde X": spätere Runden bleiben außen vor.
+	 */
+	public function testRundenabgrenzung(): void
+	{
+		$arrWettkaempfe = array
+		(
+			array('team1' => 1, 'team2' => 2, 'resultTeam1' => '3', 'resultTeam2' => '1', 'round' => 1),
+			array('team1' => 1, 'team2' => 3, 'resultTeam1' => '0', 'resultTeam2' => '4', 'round' => 2),
+			array('team1' => 1, 'team2' => 4, 'resultTeam1' => '4', 'resultTeam2' => '0', 'round' => 3),
+		);
+
+		$nachEins = Rangliste::ausWettkaempfen($this->mannschaften(), $arrWettkaempfe, 1);
+		$this->assertSame(1, $this->zeile($nachEins, 1)['kaempfe']);
+		$this->assertSame(2, $this->zeile($nachEins, 1)['mp']);
+		$this->assertSame(0, $this->zeile($nachEins, 3)['kaempfe'], 'Runde 2 zählt hier noch nicht');
+
+		$nachZwei = Rangliste::ausWettkaempfen($this->mannschaften(), $arrWettkaempfe, 2);
+		$this->assertSame(2, $this->zeile($nachZwei, 1)['kaempfe']);
+		$this->assertSame(2, $this->zeile($nachZwei, 1)['mp'], 'Runde 2 verloren, keine weiteren Punkte');
+
+		$alle = Rangliste::ausWettkaempfen($this->mannschaften(), $arrWettkaempfe);
+		$this->assertSame(3, $this->zeile($alle, 1)['kaempfe'], 'Ohne Angabe zählen alle Runden');
+		$this->assertSame(4, $this->zeile($alle, 1)['mp']);
+	}
+
+	/**
+	 * Die Zellen der Kreuztabelle halten sich an dieselben Regeln.
+	 */
+	public function testZellen(): void
+	{
+		$arrZellen = Rangliste::zellen(array
+		(
+			array('team1' => 1, 'team2' => 2, 'resultTeam1' => '2.5', 'resultTeam2' => '1.5', 'round' => 1, 'bretter' => 4),
+			array('team1' => 1, 'team2' => 3, 'resultTeam1' => '0.0', 'resultTeam2' => '0.0', 'round' => 2, 'bretter' => 0),
+		), null);
+
+		$this->assertSame(array('2,5 : 1,5'), $arrZellen[1][2]);
+		$this->assertSame(array('1,5 : 2,5'), $arrZellen[2][1], 'Aus Sicht der anderen Mannschaft gedreht');
+		$this->assertArrayNotHasKey(3, $arrZellen[1], 'Ungespielt gehört nicht in die Kreuztabelle');
 	}
 
 	/**

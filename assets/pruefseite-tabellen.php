@@ -24,6 +24,7 @@ use Schachbulle\ContaoTeamtournamentBundle\Classes\Rangliste;
 
 $en = 'en' === ($_GET['sprache'] ?? '');
 $viele = isset($_GET['viele']);
+$runde = isset($_GET['runde']) ? (int) $_GET['runde'] : null;
 
 $mannschaften = array
 (
@@ -44,34 +45,27 @@ if ($viele)
 	}
 }
 
+// 'bretter' ist die Anzahl der Bretter mit Ergebnis — daran hängt, ob ein
+// Wettkampf als gespielt gilt
 $wettkaempfe = array
 (
-	array('team1' => 2, 'team2' => 1, 'resultTeam1' => '3',   'resultTeam2' => '1'),
-	array('team1' => 3, 'team2' => 4, 'resultTeam1' => '2',   'resultTeam2' => '2'),
-	array('team1' => 1, 'team2' => 3, 'resultTeam1' => '2.5', 'resultTeam2' => '1.5'),
-	array('team1' => 2, 'team2' => 4, 'resultTeam1' => '0',   'resultTeam2' => '4'),
-	array('team1' => 5, 'team2' => 1, 'resultTeam1' => '2',   'resultTeam2' => '2'),
+	array('round' => 1, 'team1' => 2, 'team2' => 1, 'resultTeam1' => '3',   'resultTeam2' => '1',   'bretter' => 4),
+	array('round' => 1, 'team1' => 3, 'team2' => 4, 'resultTeam1' => '2',   'resultTeam2' => '2',   'bretter' => 4),
+	array('round' => 2, 'team1' => 1, 'team2' => 3, 'resultTeam1' => '2.5', 'resultTeam2' => '1.5', 'bretter' => 4),
+	array('round' => 2, 'team1' => 2, 'team2' => 4, 'resultTeam1' => '0',   'resultTeam2' => '4',   'bretter' => 4),
+	array('round' => 3, 'team1' => 5, 'team2' => 1, 'resultTeam1' => '2',   'resultTeam2' => '2',   'bretter' => 4),
 	// Rückrunde gegen dieselbe Mannschaft
-	array('team1' => 1, 'team2' => 2, 'resultTeam1' => '2,5', 'resultTeam2' => '1,5'),
-	// noch nicht gespielt
-	array('team1' => 5, 'team2' => 4, 'resultTeam1' => '',    'resultTeam2' => ''),
+	array('round' => 3, 'team1' => 1, 'team2' => 2, 'resultTeam1' => '2,5', 'resultTeam2' => '1,5', 'bretter' => 4),
+	// Echtes 0:0 — an allen Brettern beidseitig kampflos
+	array('round' => 3, 'team1' => 3, 'team2' => 6, 'resultTeam1' => '0.0', 'resultTeam2' => '0.0', 'bretter' => 4),
+	// Noch nicht gespielt, Feld leer
+	array('round' => 4, 'team1' => 5, 'team2' => 4, 'resultTeam1' => '',    'resultTeam2' => '',    'bretter' => 0),
+	// Noch nicht gespielt, aber 0.0 in der Datenbank — der gemeldete Fehler
+	array('round' => 4, 'team1' => 1, 'team2' => 4, 'resultTeam1' => '0.0', 'resultTeam2' => '0.0', 'bretter' => 0),
 );
 
-$tabelle = Rangliste::ausWettkaempfen($mannschaften, $wettkaempfe);
-
-// Zellen der Kreuztabelle wie in Rangliste::kreuztabelle(), nur ohne Datenbank
-$zellen = array();
-
-foreach ($wettkaempfe as $w)
-{
-	if (!Rangliste::istGewertet($w['resultTeam1'], $w['resultTeam2']))
-	{
-		continue;
-	}
-
-	$zellen[$w['team1']][$w['team2']][] = Schachbulle\ContaoTeamtournamentBundle\Classes\Wertung::ausZahl($w['resultTeam1']).' : '.Schachbulle\ContaoTeamtournamentBundle\Classes\Wertung::ausZahl($w['resultTeam2']);
-	$zellen[$w['team2']][$w['team1']][] = Schachbulle\ContaoTeamtournamentBundle\Classes\Wertung::ausZahl($w['resultTeam2']).' : '.Schachbulle\ContaoTeamtournamentBundle\Classes\Wertung::ausZahl($w['resultTeam1']);
-}
+$tabelle = Rangliste::ausWettkaempfen($mannschaften, $wettkaempfe, $runde);
+$zellen = Rangliste::zellen($wettkaempfe, $runde);
 
 // Flaggen wie im Inhaltselement, hier aus dem Flaggen-Bundle direkt
 $flaggen = array();
@@ -104,6 +98,15 @@ foreach ($tabelle as $zeile)
 	<a href="?">Deutsch</a> ·
 	<a href="?sprache=en">English</a> ·
 	<a href="?<?= $viele ? '' : 'viele=1' ?>"><?= $viele ? '6 Mannschaften' : '41 Mannschaften' ?></a>
+</p>
+<p>
+	Stand nach Runde:
+	<a href="?runde=1">1</a> ·
+	<a href="?runde=2">2</a> ·
+	<a href="?runde=3">3</a> ·
+	<a href="?runde=4">4</a> ·
+	<a href="?">alle</a>
+	<?= null === $runde ? '(derzeit alle Runden)' : '(derzeit nach Runde '.$runde.')' ?>
 </p>
 
 <h2>Tabelle</h2>

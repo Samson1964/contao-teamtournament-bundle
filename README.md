@@ -78,8 +78,21 @@ je Wettkampf. Beide Tabellen rechnen daraus bei jedem Aufruf neu:
   dem Namen. Wer in beidem gleichauf liegt, teilt sich den Rang (1., 1., 3.). Eine
   Feinwertung wie der direkte Vergleich oder Sonneborn-Berger ist bewusst nicht eingebaut —
   welche gilt, hängt an der Ausschreibung.
-* **Nur Wettkämpfe mit eingetragenem Ergebnis zählen.** Ein noch nicht gespielter Wettkampf
-  verfälscht die Tabelle nicht; ein 0:4 dagegen ist ein Ergebnis.
+* **Nur gespielte Wettkämpfe zählen.** Als gespielt gilt ein Wettkampf, sobald mindestens
+  ein Brett ein Ergebnis hat. Gibt es gar keine Bretter, weil nur Mannschaftsergebnisse
+  gepflegt werden, entscheidet die Summe: alles über null ist ein Ergebnis. Ein 0:4 zählt
+  also, ein 0:0 ohne Bretter nicht — in der Datenbank steht bei ungespielten Wettkämpfen
+  nämlich fast immer `0.0 : 0.0` (siehe unten).
+* **Die Runde grenzt ein.** Steht am Inhaltselement eine Runde, zählen alle Wettkämpfe bis
+  einschließlich dieser Runde — die Tabelle zeigt dann den Stand nach dieser Runde. Ohne
+  Angabe gelten alle Runden.
+
+> **Warum ein 0:0 ohne Bretter nicht zählt:** Bei Turnieren mit errechneten
+> Mannschaftspunkten trägt das Bundle in jeden Wettkampf eine Summe ein, auch in noch nicht
+> gespielte; und bis 0.4.2 machte die Eingabemaske aus einem leeren Punktefeld bei jedem
+> Speichern eine `0.0`. Würde man solche Wettkämpfe als Unentschieden werten, bekäme jede
+> Mannschaft für jede noch nicht gespielte Begegnung einen Punkt. Nicht unterscheidbar
+> bleibt ein von Hand eingetragenes 0:0 ganz ohne Bretter.
 
 In einer Zelle der Kreuztabelle stehen die Brettpunkte aus Sicht der Zeilenmannschaft
 (`2,5 : 1,5`). Haben zwei Mannschaften mehrfach gegeneinander gespielt, stehen beide

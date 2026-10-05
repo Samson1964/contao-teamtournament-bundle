@@ -15,6 +15,7 @@ use Contao\ContentElement;
 use Contao\Database;
 use Schachbulle\ContaoTeamtournamentBundle\Classes\Helfer;
 use Schachbulle\ContaoTeamtournamentBundle\Classes\Partiedaten;
+use Schachbulle\ContaoTeamtournamentBundle\Classes\Rangliste;
 use Schachbulle\ContaoTeamtournamentBundle\Classes\Wertung;
 
 /**
@@ -58,7 +59,9 @@ class Rounds extends ContentElement
 		$spieler = $this->getSpieler((int) $this->teamtournament_turnier, $objTurnier->gender, $objTurnier->imageSize_results, !$objTurnier->hideImages_results);
 
 		$objWettkaempfe = Database::getInstance()
-			->prepare("SELECT * FROM tl_teamtournament_matches WHERE pid=? AND round=? ORDER BY board ASC, id ASC")
+			// Die Unterabfrage zählt die Bretter mit Ergebnis; daran hängt, ob
+			// der Wettkampf als gespielt gilt (siehe getErgebnis())
+			->prepare("SELECT m.*, (SELECT COUNT(*) FROM tl_teamtournament_games g WHERE g.pid=m.id AND g.result!='') AS bretter FROM tl_teamtournament_matches m WHERE m.pid=? AND m.round=? ORDER BY m.board ASC, m.id ASC")
 			->execute($this->teamtournament_turnier, $this->teamtournament_runde);
 
 		$brett = $objTurnier->language == 'en' ? 'Bo.' : 'Br.';
@@ -76,7 +79,7 @@ class Rounds extends ContentElement
 				$content .= '<tr class="empty"><td class="empty" colspan="6">&nbsp;</td></tr>';
 			}
 
-			$ergebnis = self::getErgebnis($objWettkaempfe->resultTeam1, $objWettkaempfe->resultTeam2);
+			$ergebnis = self::getErgebnis($objWettkaempfe->resultTeam1, $objWettkaempfe->resultTeam2, (int) $objWettkaempfe->bretter);
 
 			$content .= '<tr class="head">';
 			$content .= '<th class="board">'.$brett.'</th>';
@@ -294,25 +297,25 @@ class Rounds extends ContentElement
 	 * Die Punkte stehen in der Datenbank mit Punkt als Dezimaltrennzeichen; in
 	 * der Ausgabe steht das hierzulande übliche Komma.
 	 *
-	 * @param mixed $erg1 Brettpunkte der ersten Mannschaft
-	 * @param mixed $erg2 Brettpunkte der zweiten Mannschaft
+	 * Ob ein Wettkampf überhaupt gespielt wurde, entscheidet
+	 * Rangliste::istGewertet(): In der Datenbank steht bei ungespielten
+	 * Wettkämpfen meist 0.0 : 0.0, und das wurde hier bis 0.5.0 als Ergebnis
+	 * ausgegeben.
+	 *
+	 * @param mixed $erg1       Brettpunkte der ersten Mannschaft
+	 * @param mixed $erg2       Brettpunkte der zweiten Mannschaft
+	 * @param int   $intBretter Anzahl der Bretter dieses Wettkampfes mit Ergebnis
 	 *
 	 * @return string Das Ergebnis als '4,5 : 3,5', oder '-', solange der
-	 *                Wettkampf noch nicht gewertet ist
+	 *                Wettkampf nicht gespielt ist
 	 */
-	public static function getErgebnis($erg1, $erg2): string
+	public static function getErgebnis($erg1, $erg2, int $intBretter = 0): string
 	{
-		// Geprüft wird auf „nichts eingetragen", nicht auf „unwahr": Ein
-		// Wettkampf, der 0:4 ausgegangen ist, hat auf der einen Seite eine
-		// Null stehen, und die wäre in PHP unwahr
-		$strErg1 = trim((string) $erg1);
-		$strErg2 = trim((string) $erg2);
-
-		if ('' === $strErg1 && '' === $strErg2)
+		if (!Rangliste::istGewertet($erg1, $erg2, $intBretter))
 		{
 			return '-';
 		}
 
-		return Wertung::ausZahl($strErg1).' : '.Wertung::ausZahl($strErg2);
+		return Wertung::ausZahl($erg1).' : '.Wertung::ausZahl($erg2);
 	}
 }
